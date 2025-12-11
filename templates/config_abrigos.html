@@ -1,0 +1,283 @@
+{% extends "principal.html" %}
+
+{% block title %}Abrigos{% endblock %}
+
+{% block content %}
+
+<div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
+    <h2>Abrigos</h2>
+    <a href="/config/abrigos/add">
+        <button class="animated-btn">Cadastrar Abrigo</button>
+    </a>
+</div>
+
+<!-- FILTROS PERSONALIZADOS -->
+<div class="filtros-container">
+    <div class="filtro-item">
+        <label>ID</label>
+        <div class="search-container" data-col="1">
+            <input type="text" placeholder="Clique para selecionar..." class="filter-search">
+            <span class="arrow">▼</span>
+            <div class="options"></div>
+        </div>
+    </div>
+
+    <div class="filtro-item">
+        <label>Nome do Abrigo</label>
+        <div class="search-container" data-col="2">
+            <input type="text" placeholder="Clique para selecionar..." class="filter-search">
+            <span class="arrow">▼</span>
+            <div class="options"></div>
+        </div>
+    </div>
+
+    <div class="filtro-item">
+        <label>Status</label>
+        <div class="search-container" data-col="3">
+            <input type="text" placeholder="Clique para selecionar..." class="filter-search">
+            <span class="arrow">▼</span>
+            <div class="options"></div>
+        </div>
+    </div>
+
+    <div style="display:flex; align-items:center;">
+        <button id="clear-filters" class="clear-btn">🧹 Limpar Filtros</button>
+    </div>
+</div>
+
+<!-- TABELA DE ABRIGOS -->
+<table id="tableAbrigos">
+    <thead>
+        <tr>
+            <th><input type="checkbox" onclick="toggleAll(this)" id="select-all"></th>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Logradouro</th>
+            <th>Status</th>
+            <th style="width: 100px;">Ações</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for abrigo in abrigos %}
+        <tr>
+            <td><input type="checkbox" class="select-item"></td>
+            <td>{{ abrigo.id }}</td>
+            <td>{{ abrigo.nome }}</td>
+            <td>{{ abrigo.logradouro }}</td>
+            <td>{{ abrigo.status }}</td>
+            <td>
+                <!-- Editar -->
+                <a href="/config/abrigos/edit/{{ abrigo.id }}" title="Editar"><i class="fas fa-pen" style="color:#ffaa00; font-size:18px; margin-right:12px;"></i></a>
+                <!-- Visualizar -->
+                <a href="/config/abrigos/view/{{ abrigo.id }}" title="Visualizar"><i class="fas fa-eye" style="color:#004080; font-size:18px;"></i></a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- LIBS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<style>
+/* ======= FILTROS ======= */
+.filtros-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 25px;
+    margin-bottom: 15px;
+    background-color: transparent;
+    padding: 15px 20px;
+    border-radius: 8px;
+}
+
+.filtro-item { display:flex; flex-direction:column; min-width:180px; flex:1; }
+
+.filtro-item label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #004080;
+    margin-bottom: 5px;
+}
+
+.search-container {
+    position: relative; width:100%;
+}
+
+.filter-search {
+    width: 100%;
+    padding: 8px 28px 8px 8px;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.options {
+    position:absolute;
+    top:36px;
+    left:0; right:0;
+    background:white;
+    border:1px solid #ccc;
+    max-height:200px;
+    overflow-y:auto;
+    z-index:10;
+    border-radius:6px;
+    display:none;
+}
+
+.option { padding:6px 10px; font-size:13px; cursor:pointer; }
+.option:hover { background:#f0f0f0; }
+
+.arrow {
+    position:absolute;
+    right:8px;
+    top:50%;
+    transform:translateY(-50%);
+    pointer-events:none;
+}
+
+.clear-btn {
+    background-color: #cc0000;
+    color:white;
+    padding:8px 15px;
+    border-radius:6px;
+    font-weight:bold;
+    border:none;
+    cursor:pointer;
+}
+.clear-btn:hover { background-color:#a00000; }
+
+/* ======= TABELA ======= */
+#tableAbrigos {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    border: 1px solid #ccc;
+}
+
+#tableAbrigos th, #tableAbrigos td {
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+}
+
+#tableAbrigos thead tr {
+    background-color: #004080;
+    color: white;
+}
+
+#tableAbrigos tbody tr:nth-child(odd) {
+    background-color: #f0f0f0;
+}
+
+#tableAbrigos tbody tr:nth-child(even) {
+    background-color: #e0e0e0;
+}
+
+#tableAbrigos tbody tr:hover {
+    background-color: #d0d0d0;
+}
+
+#tableAbrigos th {
+    font-weight: bold;
+    text-align: left;
+}
+</style>
+
+<script>
+function toggleAll(source){
+    document.querySelectorAll('.select-item').forEach(c => c.checked = source.checked);
+}
+
+$(document).ready(function () {
+
+    const table = $('#tableAbrigos').DataTable({
+        order: [[1, "asc"]],
+        columnDefs: [{ orderable:false, targets:[0,5] }],
+        language:{
+            emptyTable:"Nenhum abrigo encontrado",
+            info:"Mostrando _START_ a _END_ de _TOTAL_",
+            lengthMenu:"Mostrar _MENU_",
+            paginate:{ next:"Próximo", previous:"Anterior" }
+        },
+        pageLength: 10,
+        dom: 'rt<"bottom"l<"info-wrapper"ip>><"clear">'
+    });
+
+    /* === FILTROS === */
+    $('.search-container').each(function(){
+
+        const container = $(this);
+        const input = container.find('.filter-search');
+        const optionsDiv = container.find('.options');
+        const arrow = container.find('.arrow');
+        const colIndex = container.data('col');
+        const column = table.column(colIndex);
+
+        let selecionados = [];
+        const valores = column.data().unique().sort().toArray();
+
+        function renderOptions(lista){
+            optionsDiv.empty();
+            lista.forEach(v => {
+                const checked = selecionados.includes(v) ? "checked" : "";
+                optionsDiv.append(`
+                    <div class="option">
+                        <input type="checkbox" value="${v}" ${checked}> ${v}
+                    </div>`);
+            });
+            optionsDiv.show();
+        }
+
+        input.on("click", function(e){
+            e.stopPropagation();
+            renderOptions(valores);
+        });
+
+        input.on("input", function(){
+            const q = input.val().toLowerCase();
+            const filtradas = valores.filter(v => v.toLowerCase().includes(q));
+            renderOptions(filtradas);
+        });
+
+        optionsDiv.on("change","input[type=checkbox]",function(){
+            const val = $(this).val();
+            if(this.checked) selecionados.push(val);
+            else selecionados = selecionados.filter(v => v !== val);
+            input.val(selecionados.join(", "));
+            applyFilter();
+        });
+
+        function applyFilter(){
+            if(selecionados.length){
+                const regex = selecionados.map(v => '^'+v+'$').join('|');
+                column.search(regex, true, false).draw();
+            } else column.search('').draw();
+        }
+
+        $(document).on("click", function(e){
+            if(!$(e.target).closest(container).length){
+                optionsDiv.hide();
+            }
+        });
+
+        container.data('reset', () => {
+            selecionados = [];
+            input.val('');
+            column.search('').draw();
+        });
+    });
+
+    $("#clear-filters").on("click", function(){
+        $('.search-container').each(function(){
+            $(this).data('reset')();
+        });
+    });
+
+});
+</script>
+
+{% endblock %}

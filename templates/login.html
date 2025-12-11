@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Abrigo Amigo – Sistema de Atendimentos e Chamados</title>
+
+    <style>
+        /* Fundo com imagem sem afetar o conteúdo */
+    body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://i.postimg.cc/nc908gXd/8ef85529-7b68-486b-adbb-7eeaeed90e22.png');
+    background-size: cover;       /* mostra a imagem inteira */
+    background-repeat: no-repeat;   /* evita repetição */
+    background-position: center;    /* centraliza a imagem */
+    opacity: 0.5;
+    z-index: -1;
+    }
+
+    /* Mantém seu estilo atual */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #d0e7ff; /* fallback se a imagem não carregar */
+    }
+
+        /* Título */
+        .app-title {
+            text-align: center;
+            color: #0033cc;
+            font-family: monospace;
+            margin-bottom: 30px;
+            font-size: 1.6rem;
+            text-shadow:
+                2px 2px 0 #ffffff,
+                4px 4px 2px rgba(255, 255, 255, 0.9),
+                6px 6px 4px rgba(255, 255, 255, 0.7);
+        }
+
+        .app-title h1,
+        .app-title h3 {
+            margin: 5px 0;
+        }
+
+        /* Container do login */
+        .login-container {
+            background: #ffffff;
+            padding: 40px 55px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            text-align: center;
+            width: 350px;
+            margin-top: 400px; /* ↓↓↓ AQUI ABAIXA O FORM */
+        }
+
+        /* Inputs */
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0 20px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        /* Botão */
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            color: white;
+            background: linear-gradient(90deg, #0077cc, #00aaff);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(90deg, #00aaff, #0077cc);
+            transform: scale(1.05);
+        }
+
+        /* Erro */
+        .error {
+            color: red;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        /* Popup */
+        .popup {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+        }
+
+        .popup-content {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 300px;
+    text-align: center;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+        }
+
+        .popup-content button {
+    margin-top: 15px;
+    padding: 8px 20px;
+    border: none;
+    background: #0077cc;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+        }   
+    </style>
+</head>
+<body>
+
+<!-- Título do sistema -->
+<div class="app-title">
+    
+</div>
+
+<!-- Área do formulário -->
+<div class="login-container">
+
+       <form method="POST" action="/">
+    <label>Login</label>
+    <input type="text" name="login" required>
+
+    <label>Senha</label>
+    <input type="password" name="senha" required>
+
+    <!--
+    <label>Perfil</label>
+    <select name="perfil">
+        <option value="Admin">Admin</option>
+        <option value="Atendente">Atendente</option>
+        <option value="Operador">Operador</option>
+    </select>
+    -->
+
+    <button type="submit">Entrar</button>
+</form>
+
+</div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div id="popup" class="popup">
+            <div class="popup-content">
+                {% for category, message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+                <button onclick="document.getElementById('popup').style.display='none'">
+                    OK
+                </button>
+            </div>
+        </div>
+    {% endif %}
+{% endwith %}
+</body>
+</html>

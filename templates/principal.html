@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Abrigo Amigo{% endblock %}</title>
+
+    <!-- ==============================
+         ESTILOS GLOBAIS (USANDO VARIÁVEIS)
+         ============================== -->
+    <style>
+        /* ====== CORPO DA PÁGINA ====== */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-main, #ffffff);
+        }
+
+        /* ====== MENU LATERAL ====== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 220px;
+            height: 100vh;
+            background-color: var(--sidebar-bg, #727475);
+            padding-top: 60px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-title {
+            color: var(--sidebar-text, #ffffff) !important;
+            text-align: center !important;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: var(--sidebar-text, #ffffff);
+            border-radius: 5px;
+            margin: 2px 10px;
+            transition: background 0.3s;
+            font-size: 1rem;
+            gap: 10px;
+        }
+
+        .sidebar a:hover {
+            background-color: var(--sidebar-hover, #005fa3);
+        }
+
+        /* ====== SUBMENU ====== */
+        .submenu {
+            display: flex;
+            flex-direction: column;
+            margin: 5px 10px;
+        }
+
+        .submenu-btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: none;
+            border: none;
+            color: var(--sidebar-text, #ffffff);
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .submenu-btn:hover {
+            background-color: var(--sidebar-hover, #005fa3);
+        }
+
+        .submenu-content {
+            display: none;
+            flex-direction: column;
+            margin-left: 15px;
+            margin-top: 5px;
+        }
+
+        .submenu.open .submenu-content {
+            display: flex;
+        }
+
+        .submenu .caret {
+            margin-left: auto;
+            color: var(--sidebar-text, #ffffff);
+            transition: transform 0.3s;
+        }
+
+        .submenu.open .caret {
+            transform: rotate(180deg);
+        }
+
+        /* ====== CONTEÚDO PRINCIPAL ====== */
+        .main-content {
+            margin-left: 220px;
+            padding: 40px;
+            min-height: 100vh;
+            background-color: var(--bg-main, #e6f0ff);
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px var(--shadow-default, rgba(0,0,0,0.2));
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .app-title {
+            text-align: center;
+            color: var(--text-blue, rgba(8,31,245,0.911));
+            font-family: monospace;
+            margin-bottom: 30px;
+        }
+
+        .app-title h1,
+        .app-title h3 {
+            margin: 5px 0;
+        }
+
+        /* ====== USER MENU ====== */
+        .user-menu {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .user-btn {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--text-blue, #0077cc);
+        }
+
+        .user-icon i {
+            font-size: 1.1rem;
+            color: var(--text-blue, #0077cc);
+        }
+
+        .user-name {
+            margin-left: 8px;
+            font-weight: bold;
+            color: var(--text-blue, #0077cc);
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background-color: var(--bg-card, #ffffff);
+            min-width: 150px;
+            box-shadow: 0px 2px 5px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+
+        .dropdown a {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: var(--text-normal, #333333);
+            transition: 0.2s;
+        }
+
+        .dropdown a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .user-menu:hover .dropdown {
+            display: block;
+        }
+
+        /* ====== TOASTS DE NOTIFICAÇÃO ====== */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+        }
+
+        .toast {
+            min-width: 250px;
+            margin-bottom: 10px;
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: #fff;
+            font-weight: bold;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .toast.success { background-color: #28a745; }
+        .toast.error   { background-color: #dc3545; }
+        .toast.info    { background-color: #007bff; }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    </style>
+
+    <!-- ====== DEPENDÊNCIAS ====== -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <!-- ====== MENU LATERAL ====== -->
+    <div class="sidebar">
+        <h2 class="sidebar-title">MENU</h2>
+
+        <a href="/principal"><i class="fas fa-home"></i> Início</a>
+        <a href="/atendimentos"><i class="fas fa-headset"></i> Atendimentos</a>
+        <a href="/operador/chamados"><i class="fas fa-ticket-alt"></i> Chamados (Operador)</a>
+
+        <!-- Submenu Configurações -->
+        <div class="submenu">
+            <button class="submenu-btn">
+                <i class="fas fa-cog"></i> Configurações
+                <i class="fa fa-caret-down caret"></i>
+            </button>
+            <div class="submenu-content">
+                <a href="/config/abrigos"><i class="fas fa-home"></i> Abrigos</a>
+                <a href="/config/usuarios"><i class="fas fa-users"></i> Usuários</a>
+            </div>
+        </div>
+
+        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Sair</a>
+    </div>
+
+    <!-- ====== CONTEÚDO PRINCIPAL ====== -->
+    <div class="main-content">
+        <div class="app-title">
+            <h1>Abrigo Amigo</h1>
+            <h3>Sistema de Atendimentos e Chamados</h3>
+        </div>
+
+        <!-- Usuário logado -->
+        <div class="user-menu">
+            <span class="user-icon"><i class="fas fa-user-circle"></i></span>
+            <span class="user-name">{{ current_user.login }}</span>
+
+            <div class="dropdown">
+                <a href="/meus-dados"><i class="fas fa-id-card"></i> Meus Dados</a>
+                <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+        </div>
+
+        <!-- CONTAINER DE TOASTS -->
+        <div id="toast-container"></div>
+
+        <!-- CONTEÚDO DINÂMICO DAS PÁGINAS -->
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <!-- ====== SCRIPT SUBMENU ====== -->
+    <script>
+        document.querySelectorAll('.submenu-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const submenu = button.parentElement;
+                submenu.classList.toggle('open');
+            });
+        });
+    </script>
+
+    <!-- ====== TOAST FLUTUANTE ====== -->
+    <<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const container = document.getElementById("toast-container");
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                const toast = document.createElement("div");
+                toast.classList.add("toast", {{ category|tojson }});  // categoria como string JS
+                toast.innerText = {{ message|tojson }};               // mensagem segura
+                container.appendChild(toast);
+
+                setTimeout(() => { toast.classList.add("show"); }, 100);
+                setTimeout(() => { toast.classList.remove("show"); }, 4000);
+                setTimeout(() => { toast.remove(); }, 5000);
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+});
+</script>
+
+
+
+    <!-- ====== DEPENDÊNCIAS JS ====== -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

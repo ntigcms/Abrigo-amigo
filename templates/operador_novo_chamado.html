@@ -1,0 +1,239 @@
+{% extends "principal.html" %}
+
+{% block title %}Novo Atendimento{% endblock %}
+
+{% block content %}
+
+<h2 style="margin-bottom: 20px;">Novo Atendimento</h2>
+
+<form id="novoAtendimentoForm" method="POST" action="{{ url_for('novo_chamado') }}">
+
+    <div class="form-container">
+
+        <!-- Solicitante -->
+        <div class="form-item">
+            <label for="solicitante">Solicitante <span style="color:red;">*</span></label>
+            <input type="text" id="solicitante" name="solicitante" required placeholder="Nome do solicitante">
+        </div>
+
+        <!-- Contato -->
+        <div class="form-item">
+            <label for="telefone">Contato <span style="color:red;">*</span></label>
+            <input type="text" id="telefone" name="telefone" required placeholder="(XX) XXXXX-XXXX" maxlength="15">
+        </div>
+
+        <!-- Abrigo -->
+        <div class="form-item">
+            <label for="abrigo">Abrigo <span style="color:red;">*</span></label>
+            <select id="abrigo" name="abrigo" required>
+                <option value="">Selecione um abrigo</option>
+                {% for a in abrigos %}
+                    <option value="{{ a.id }}"
+                            data-logradouro="{{ a.logradouro }}"
+                            data-bairro="{{ a.bairro }}"
+                            data-cep="{{ a.cep }}"
+                            data-latitude="{{ a.latitude }}"
+                            data-longitude="{{ a.longitude }}"
+                            {% if atendimento and atendimento.abrigo_id == a.id %} selected {% endif %}>
+                        {{ a.nome }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Endereço automático -->
+        <div class="form-item">
+            <label for="logradouro">Logradouro</label>
+            <input type="text" id="logradouro" name="logradouro" readonly>
+        </div>
+
+        <div class="form-item">
+            <label for="bairro">Bairro</label>
+            <input type="text" id="bairro" name="bairro" readonly>
+        </div>
+
+        <div class="form-item">
+            <label for="cep">CEP</label>
+            <input type="text" id="cep" name="cep" readonly>
+        </div>
+
+        <!-- Latitude -->
+        <div class="form-item">
+            <label for="latitude">Latitude</label>
+            <input type="text" id="latitude" name="latitude" readonly>
+        </div>
+
+        <!-- Longitude -->
+        <div class="form-item">
+            <label for="longitude">Longitude</label>
+            <input type="text" id="longitude" name="longitude" readonly>
+        </div>
+
+        <!-- Descrição da Ocorrência -->
+        <div class="form-item full-width">
+            <label for="descricao">Descrição da Ocorrência <span style="color:red;">*</span></label>
+            <textarea id="descricao" name="descricao" required maxlength="1000" placeholder="Descreva a ocorrência"></textarea>
+            <small id="descricao-contador">0 / 1000</small>
+        </div>
+
+        <!-- Mapa -->
+        <div class="form-item full-width">
+            <label>Localização:</label>
+            <div id="map" style="height: 300px; border-radius: 6px;"></div>
+        </div>
+
+        <!-- Botões -->
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">Salvar</button>
+            <a href="{{ url_for('atendimentos') }}"><button type="button" class="btn-cancel">Cancelar</button></a>
+        </div>
+
+    </div>
+</form>
+
+<!-- Estilos -->
+<style>
+.form-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    background-color: #f8f8f8;
+    padding: 25px 30px;
+    border-radius: 8px;
+    max-width: 900px;
+}
+
+.form-item {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 300px;
+}
+
+.form-item.full-width { flex-basis: 100%; }
+
+label { font-weight: 600; color: #004080; margin-bottom: 6px; font-size: 14px; }
+input, select, textarea {
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    font-size: 14px;
+    width: 100%;
+}
+
+textarea { min-height: 120px; resize: vertical; }
+input[readonly] { background-color: #e9e9e9; }
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.btn-submit {
+    background-color: #004080;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.btn-submit:hover { background-color: #003060; }
+
+.btn-cancel {
+    background-color: #ccc;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.btn-cancel:hover { background-color: #aaa; }
+
+#descricao-contador {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #555;
+    text-align: right;
+}
+</style>
+
+<!-- Scripts -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+// Preencher endereço e coordenadas ao selecionar abrigo
+document.getElementById('abrigo').addEventListener('change', function() {
+    const selected = this.selectedOptions[0];
+
+    document.getElementById('logradouro').value = selected.dataset.logradouro || '';
+    document.getElementById('bairro').value = selected.dataset.bairro || '';
+    document.getElementById('cep').value = selected.dataset.cep || '';
+
+    // Atualiza Latitude/Longitude
+    if(selected.dataset.latitude && selected.dataset.longitude) {
+        const lat = parseFloat(selected.dataset.latitude);
+        const lng = parseFloat(selected.dataset.longitude);
+
+        document.getElementById('latitude').value = lat.toFixed(6);
+        document.getElementById('longitude').value = lng.toFixed(6);
+
+        marker.setLatLng([lat, lng]);
+        map.setView([lat, lng], 16);
+    }
+});
+
+// Máscara de telefone simples
+const telefoneInput = document.getElementById('telefone');
+telefoneInput.addEventListener('input', function(e) {
+    let v = this.value.replace(/\D/g, '');
+    if(v.length > 11) v = v.slice(0,11);
+    if(v.length > 6) this.value = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+    else if(v.length > 2) this.value = `(${v.slice(0,2)}) ${v.slice(2)}`;
+    else this.value = v ? `(${v}` : '';
+});
+
+// Contador de caracteres
+const descricao = document.getElementById('descricao');
+const contador = document.getElementById('descricao-contador');
+descricao.addEventListener('input', function() {
+    contador.textContent = `${this.value.length} / 1000`;
+});
+
+// Validação
+document.getElementById('novoAtendimentoForm').addEventListener('submit', function(e) {
+    const requiredFields = ['solicitante', 'telefone', 'abrigo', 'descricao'];
+    let valid = true;
+    requiredFields.forEach(id => {
+        const field = document.getElementById(id);
+        if(!field.value.trim()) valid = false;
+    });
+    if(!valid) {
+        e.preventDefault();
+        alert('Por favor, preencha todos os campos obrigatórios.');
+    }
+});
+
+// Inicializa mapa
+var latInput = document.getElementById('latitude');
+var lngInput = document.getElementById('longitude');
+var lat = parseFloat(latInput.value) || -15.7801;
+var lng = parseFloat(lngInput.value) || -47.9292;
+
+var map = L.map('map').setView([lat, lng], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+
+var marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+// Atualiza inputs ao arrastar marcador
+marker.on('dragend', function() {
+    var pos = marker.getLatLng();
+    latInput.value = pos.lat.toFixed(6);
+    lngInput.value = pos.lng.toFixed(6);
+});
+</script>
+
+{% endblock %}

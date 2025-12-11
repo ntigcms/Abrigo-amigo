@@ -1,0 +1,192 @@
+{% extends "principal.html" %}
+
+{% block title %}
+  {% if action == 'add' %}Cadastrar Abrigo{% else %}Editar Abrigo{% endif %}
+{% endblock %}
+
+{% block content %}
+<h2 style="margin-bottom: 20px;">
+  {% if action == 'add' %}Cadastrar Abrigo{% else %}Editar Abrigo{% endif %}
+</h2>
+
+<form id="abrigoForm" method="POST"
+      action="{% if action == 'add' %}/config/abrigos/add{% else %}/config/abrigos/edit/{{ abrigo.id }}{% endif %}">
+
+    <div class="form-container">
+
+        <!-- Nome -->
+        <div class="form-item">
+            <label for="nome">Nome <span style="color:red;">*</span></label>
+            <input type="text" id="nome" name="nome" required
+                   value="{{ abrigo.nome if abrigo else '' }}">
+        </div>
+
+        <!-- CEP -->
+        <div class="form-item">
+            <label for="cep">CEP <span style="color:red;">*</span></label>
+            <div style="display:flex; align-items:center;">
+                <input type="text" id="cep" name="cep" required
+                       value="{{ abrigo.cep if abrigo else '' }}">
+                <button type="button" id="buscarCep" style="margin-left:5px;">🔍</button>
+            </div>
+        </div>
+
+        <!-- Logradouro -->
+        <div class="form-item">
+            <label for="logradouro">Logradouro</label>
+            <input type="text" id="logradouro" name="logradouro" readonly
+                   value="{{ abrigo.logradouro if abrigo else '' }}">
+        </div>
+
+        <!-- Bairro -->
+        <div class="form-item">
+            <label for="bairro">Bairro</label>
+            <input type="text" id="bairro" name="bairro" readonly
+                   value="{{ abrigo.bairro if abrigo else '' }}">
+        </div>
+
+        <!-- Cidade -->
+        <div class="form-item">
+            <label for="cidade">Cidade</label>
+            <input type="text" id="cidade" name="cidade" readonly
+                   value="{{ abrigo.cidade if abrigo else '' }}">
+        </div>
+
+        <!-- Estado -->
+        <div class="form-item">
+            <label for="estado">Estado</label>
+            <input type="text" id="estado" name="estado" readonly
+                   value="{{ abrigo.estado if abrigo else '' }}">
+        </div>
+
+        <!-- Status -->
+        <div class="form-item">
+            <label for="status">Status</label>
+            <select id="status" name="status" required>
+                <option value="Ativo" {% if abrigo and abrigo.status=="Ativo" %}selected{% endif %}>Ativo</option>
+                <option value="Inativo" {% if abrigo and abrigo.status=="Inativo" %}selected{% endif %}>Inativo</option>
+            </select>
+        </div>
+
+        <!-- Latitude -->
+        <div class="form-item">
+            <label for="latitude">Latitude</label>
+            <input type="text" id="latitude" name="latitude" value="{{ abrigo.latitude if abrigo else '' }}">
+        </div>
+
+        <!-- Longitude -->
+        <div class="form-item">
+            <label for="longitude">Longitude</label>
+            <input type="text" id="longitude" name="longitude" value="{{ abrigo.longitude if abrigo else '' }}">
+        </div>
+
+        <!-- Mapa -->
+        <div class="form-item full-width">
+            <div id="map" style="height: 300px; border-radius: 6px;"></div>
+        </div>
+
+        <!-- Botões -->
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">
+                {% if action == 'add' %}Cadastrar{% else %}Salvar Alterações{% endif %}
+            </button>
+            <a href="/config/abrigos"><button type="button" class="btn-cancel">Cancelar</button></a>
+        </div>
+
+    </div>
+</form>
+
+<!-- Scripts -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<script>
+// CEP automático + centraliza mapa
+$('#buscarCep').on('click', function() {
+    let cep = $('#cep').val().replace(/\D/g, '');
+    if(cep.length !== 8) { alert("CEP inválido!"); return; }
+
+    $.getJSON(`https://viacep.com.br/ws/${cep}/json/`, function(data) {
+        if(!data.erro) {
+            $('#logradouro').val(data.logradouro);
+            $('#bairro').val(data.bairro);
+            $('#cidade').val(data.localidade);
+            $('#estado').val(data.uf);
+
+            // Geocodifica o endereço completo para lat/lng
+            const endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade}, ${data.uf}, Brasil`;
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}`)
+            .then(response => response.json())
+            .then(result => {
+                if(result && result.length > 0) {
+                    const lat = parseFloat(result[0].lat);
+                    const lon = parseFloat(result[0].lon);
+
+                    // Atualiza inputs
+                    $('#latitude').val(lat.toFixed(6));
+                    $('#longitude').val(lon.toFixed(6));
+
+                    // Move marcador e centraliza mapa
+                    marker.setLatLng([lat, lon]);
+                    map.setView([lat, lon], 16);
+                }
+            });
+        } else {
+            alert("CEP não encontrado!");
+        }
+    });
+});
+
+// Mapa e marcador
+var latInput = document.getElementById('latitude');
+var lngInput = document.getElementById('longitude');
+var lat = parseFloat(latInput.value) || -15.7801;
+var lng = parseFloat(lngInput.value) || -47.9292;
+var map = L.map('map').setView([lat, lng], 5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
+
+var marker = L.marker([lat, lng], {draggable:true}).addTo(map);
+
+// Atualiza inputs ao arrastar marcador
+marker.on('dragend', function(e){
+    var pos = marker.getLatLng();
+    latInput.value = pos.lat.toFixed(6);
+    lngInput.value = pos.lng.toFixed(6);
+});
+
+// Atualiza marcador se inputs forem alterados manualmente
+latInput.addEventListener('change', updateMarker);
+lngInput.addEventListener('change', updateMarker);
+
+function updateMarker() {
+    var newLat = parseFloat(latInput.value) || lat;
+    var newLng = parseFloat(lngInput.value) || lng;
+    marker.setLatLng([newLat,newLng]);
+    map.setView([newLat,newLng], map.getZoom());
+}
+</script>
+
+
+<style>
+.form-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    background-color: #f8f8f8;
+    padding: 25px 30px;
+    border-radius: 8px;
+    max-width: 900px;
+}
+.form-item { display:flex; flex-direction:column; flex:1 1 300px; }
+.form-item.full-width { flex-basis:100%; }
+label { font-weight:600; color:#004080; margin-bottom:6px; font-size:14px; }
+input, select { padding:8px 10px; border-radius:6px; border:1px solid #aaa; font-size:14px; width:100%; }
+input[readonly] { background-color:#e9e9e9; }
+.form-actions { display:flex; gap:15px; margin-top:20px; }
+.btn-submit { background-color:#004080; color:white; border:none; padding:10px 20px; border-radius:6px; font-weight:bold; cursor:pointer; }
+.btn-submit:hover { background-color:#003060; }
+.btn-cancel { background-color:#ccc; color:#333; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; }
+.btn-cancel:hover { background-color:#aaa; }
+</style>
+{% endblock %}

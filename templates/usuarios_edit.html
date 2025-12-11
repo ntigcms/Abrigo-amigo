@@ -1,0 +1,156 @@
+{% extends "principal.html" %}
+
+{% block title %}Editar Usuário{% endblock %}
+
+{% block content %}
+
+<h2>Editar Usuário</h2>
+
+<div class="form-container">
+
+    <form method="POST" action="/config/usuarios/edit/{{ usuario.id }}">
+
+        <div class="form-group">
+            <label>Nome</label>
+            <input type="text" name="nome" value="{{ usuario.nome }}" required>
+        </div>
+
+        <div class="form-group">
+            <label>Login</label>
+            <input type="text" name="login" value="{{ usuario.login }}" required>
+        </div>
+
+        <div class="form-group password-wrapper">
+    <label>Senha (deixe vazio para manter)</label>
+
+    <div class="password-container">
+        <input type="password" name="senha" id="senha">
+        <i class="fa-solid fa-eye" id="toggleSenha"></i>
+    </div>
+</div>
+
+
+        <div class="form-group">
+            <label>Perfil</label>
+            <select name="perfil" required>
+                <option value="Admin"     {% if usuario.perfil == 'Admin' %}selected{% endif %}>Admin</option>
+                <option value="Atendente" {% if usuario.perfil == 'Atendente' %}selected{% endif %}>Atendente</option>
+                <option value="Operador"  {% if usuario.perfil == 'Operador' %}selected{% endif %}>Operador</option>
+            </select>
+        </div>
+
+        <div class="form-buttons">
+            <a href="/config/usuarios">
+                <button type="button" class="btn-cancel">Cancelar</button>
+            </a>
+
+            <button type="submit" class="btn-save">Salvar Alterações</button>
+        </div>
+
+    </form>
+
+</div>
+
+<style>
+/* mesmo estilo do ADD */
+.form-container {
+    background:white;
+    padding:25px;
+    border-radius:8px;
+    width:60%;
+    min-width:380px;
+    box-shadow:0 0 8px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    display:flex;
+    flex-direction:column;
+    margin-bottom:18px;
+}
+
+.form-group label {
+    font-weight:600;
+    color:#004080;
+    margin-bottom:6px;
+}
+
+.form-group input,
+.form-group select {
+    border:1px solid #aaa;
+    padding:8px 10px;
+    border-radius:6px;
+    font-size:14px;
+}
+
+.form-buttons {
+    display:flex;
+    justify-content:flex-end;
+    margin-top:25px;
+    gap:15px;
+}
+
+.btn-cancel {
+    background-color:#999;
+    color:white;
+    padding:10px 20px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.btn-cancel:hover {
+    background-color:#777;
+}
+
+.btn-save {
+    background-color:#004080;
+    color:white;
+    padding:10px 20px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.btn-save:hover {
+    background-color:#003060;
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-container input {
+    width: 100%;
+    padding-right: 35px; /* espaço para o ícone */
+}
+
+.password-container i {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #555;
+    cursor: pointer;
+}
+
+</style>
+
+<script>
+document.getElementById("toggleSenha").addEventListener("click", function () {
+    const campo = document.getElementById("senha");
+
+    if (campo.type === "password") {
+        campo.type = "text";
+        this.classList.remove("fa-eye");
+        this.classList.add("fa-eye-slash");
+    } else {
+        campo.type = "password";
+        this.classList.remove("fa-eye-slash");
+        this.classList.add("fa-eye");
+    }
+});
+</script>
+
+{% endblock %}
