@@ -70,7 +70,22 @@
       <div class="form-group">
             <label>Status:</label>
                 <input type="text" value="{{ atendimento.status }}" readonly>
-        </div>
+      </div>
+
+      {% if atendimento.status == "Cancelado" %}
+<div class="form-item full-width">
+    <label>Justificativa do Cancelamento:</label>
+    <textarea readonly>{{ atendimento.justificativa_cancelamento }}</textarea>
+</div>
+{% endif %}
+
+{% if atendimento.status in ["Atendido", "Finalizado"] %}
+<div class="form-item full-width">
+    <label>Conclusão do Atendimento:</label>
+    <textarea readonly>{{ atendimento.conclusao }}</textarea>
+</div>
+{% endif %}
+
 
  </div>
  
@@ -81,17 +96,20 @@
       </div>
 
    <div class="buttons">
+    <!-- Sempre exibe Voltar -->
     <a href="{{ url_for('atendimentos') }}" class="btn-cancel">Voltar</a>
+        <button type="button" class="btn-pdf" onclick="exportPDF()">Exportar para PDF</button>
+    <!-- Exibe outros botões somente se status for Aberto ou Em Atendimento -->
+    {% if atendimento.status not in ["Cancelado", "Atendido", "Finalizado"] and modo_inicio and current_user.perfil in ['Admin', 'Atendente'] %}
+        <button type="button" class="btn-whatsapp" onclick="abrirModalWhatsapp()">Exportar para Whatsapp</button>
+        <button type="button" class="btn-cancelar" data-bs-toggle="modal" data-bs-target="#cancelModal">Cancelar Atendimento</button>
+        <button type="button" class="btn-finalizar" data-bs-toggle="modal" data-bs-target="#finalizarModal">Finalizar Atendimento</button>
+    {% endif %}
 
-    {% if modo_inicio and current_user.perfil in ['Admin', 'Atendente'] %}
-    <button type="button" class="btn-whatsapp" onclick="abrirModalWhatsapp()">Exportar para Whatsapp</button>
-    <button type="button" class="btn-pdf" onclick="exportPDF()">Exportar para PDF</button>
-    <button type="button" class="btn-cancelar" data-bs-toggle="modal" data-bs-target="#cancelModal">Cancelar Atendimento</button>
-{% endif %}
 <!-- Modal de Confirmação Cancelamento -->
 <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
   <div class="modal-dialog">
-    <form id="cancelForm" method="POST" action="{{ url_for('cancelar_atendimento', id=atendimento.id) }}">
+    <form id="cancelForm" method="POST" action="{{ url_for('cancelar_atendimento_ajax', id=atendimento.id) }}">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="cancelModalLabel">Confirmar Cancelamento</h5>
@@ -109,7 +127,8 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-danger">Confirmar Cancelamento</button>
+          <button type="button" class="btn btn-danger" onclick="confirmarCancelar()">Confirmar Cancelamento</button>
+          <div id="cancelError" style="color:red; display:none; margin-top:10px;"></div>
         </div>
       </div>
     </form>
@@ -135,6 +154,38 @@
   </div>
 </div>
 
+<!-- Modal de Finalização -->
+<div class="modal fade" id="finalizarModal" tabindex="-1" aria-labelledby="finalizarModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="finalizarForm" method="POST" action="{{ url_for('finalizar_atendimento_ajax', id=atendimento.id) }}">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="finalizarModalLabel">Finalizar Atendimento</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="conclusao" class="form-label">Conclusão do Atendimento *</label>
+            <textarea name="conclusao" id="conclusao" class="form-control" required></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label for="senhaFinalizar" class="form-label">Senha *</label>
+            <input type="password" name="senhaFinalizar" id="senhaFinalizar" class="form-control" required>
+          </div>
+
+          <div id="finalizarError" style="color:red; display:none; margin-top:10px;"></div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="confirmarFinalizar()">Confirmar Finalização</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
 
 </form>
 
@@ -191,7 +242,7 @@ textarea {
     background-color: #ccc;
     color: #333;
     border: none;
-    padding: 10px 25px;
+    padding: 10px 20px;
     border-radius: 6px;
     text-decoration: none;
     font-size: 16px;
@@ -208,7 +259,6 @@ textarea {
 .btn-whatsapp {
     background-color: #25D366;
     color: #fff;
-    border: none;
     padding: 10px 20px;
     border-radius: 6px;
     margin-left: 10px;
@@ -220,7 +270,6 @@ textarea {
 .btn-pdf {
     background-color: #dc3545;
     color: #fff;
-    border: none;
     padding: 10px 20px;
     border-radius: 6px;
     margin-left: 10px;
@@ -239,6 +288,20 @@ textarea {
 }
 
 .btn-cancelar:hover { background-color: #e0a800; }
+
+.btn-finalizar {
+    background-color: #007BFF;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 6px;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.btn-finalizar:hover {
+    background-color: #0069d9;
+}
+
 </style>
 
 <!-- Leaflet.js -->
@@ -277,14 +340,15 @@ function exportPDF() {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<<script>
+<script>
 function abrirModalWhatsapp() {
     var modal = new bootstrap.Modal(document.getElementById('whatsappModal'));
     modal.show();
 }
 
 function confirmarWhatsapp() {
-    const atendimentoId = {{ atendimento.id }};
+    const atendimentoId = "{{ atendimento.id }}";
+
     
     // Abre a rota Flask que altera status e redireciona para WhatsApp
     const url = "{{ url_for('iniciar_atendimento_whatsapp', id=0) }}".replace("/0", "/" + atendimentoId);
@@ -298,5 +362,122 @@ function confirmarWhatsapp() {
     modal.hide();
 }
 </script>
+
+<script>
+function abrirModalCancelar() {
+    var modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+    modal.show();
+}
+
+function confirmarCancelar() {
+    const justificativa = document.getElementById('justificativa').value.trim();
+    const senha = document.getElementById('senha').value.trim();
+
+    if (!justificativa || !senha) {
+        document.getElementById('cancelError').innerText = "Preencha justificativa e senha.";
+        document.getElementById('cancelError').style.display = "block";
+        return;
+    }
+
+    const atendimentoId = "{{ atendimento.id }}";
+    const data = { justificativa, senha };
+
+    fetch(`{{ url_for('cancelar_atendimento_ajax', id=atendimento.id) }}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+           
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            window.location.reload();  // Atualiza a página com status alterado
+        } else {
+            document.getElementById('cancelError').innerText = result.error;
+            document.getElementById('cancelError').style.display = "block";
+        }
+    })
+    .catch(err => {
+        document.getElementById('cancelError').innerText = "Erro ao cancelar atendimento.";
+        document.getElementById('cancelError').style.display = "block";
+    });
+}
+</script>
+
+<script>
+// Seleciona a modal
+var cancelModalEl = document.getElementById('cancelModal');
+
+// Evento disparado quando a modal é fechada
+cancelModalEl.addEventListener('hidden.bs.modal', function () {
+    // Limpa campos
+    document.getElementById('justificativa').value = '';
+    document.getElementById('senha').value = '';
+
+    // Limpa mensagem de erro
+    var errorEl = document.getElementById('cancelError');
+    errorEl.innerText = '';
+    errorEl.style.display = 'none';
+});
+</script>
+
+<script>
+function confirmarFinalizar() {
+    const conclusao = document.getElementById('conclusao').value.trim();
+    const senha = document.getElementById('senhaFinalizar').value.trim();
+
+    if (!conclusao || !senha) {
+        document.getElementById('finalizarError').innerText = "Preencha a conclusão e a senha.";
+        document.getElementById('finalizarError').style.display = "block";
+        return;
+    }
+
+    const data = { conclusao, senha };
+
+    fetch(`{{ url_for('finalizar_atendimento_ajax', id=atendimento.id) }}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            window.location.reload();
+        } else {
+            document.getElementById('finalizarError').innerText = result.error;
+            document.getElementById('finalizarError').style.display = "block";
+        }
+    })
+    .catch(err => {
+        document.getElementById('finalizarError').innerText = "Erro ao finalizar atendimento.";
+        document.getElementById('finalizarError').style.display = "block";
+    });
+}
+</script>
+
+<script>
+var finalizarModalEl = document.getElementById('finalizarModal');
+
+finalizarModalEl.addEventListener('hidden.bs.modal', function () {
+    document.getElementById('conclusao').value = '';
+    document.getElementById('senhaFinalizar').value = '';
+    var errorEl = document.getElementById('finalizarError');
+    errorEl.innerText = '';
+    errorEl.style.display = 'none';
+});
+</script>
+
+<script>
+function exportPDF() {
+    const atendimentoId = "{{ atendimento.id }}";
+    const url = `/atendimento/${atendimentoId}/pdf`;
+    window.open(url, '_blank');
+}
+</script>
+
 
 {% endblock %}

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, Blueprint, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, Blueprint, abort, jsonify, make_response
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_required, login_user, logout_user, UserMixin, current_user
@@ -8,7 +8,10 @@ from sqlalchemy import text
 from functools import wraps
 import pytz
 from urllib.parse import quote
+import pdfkit
+from io import BytesIO
 
+tz = pytz.timezone("America/Sao_Paulo")
 
 
 # ---------------- APP / CONFIG ------------------
@@ -72,12 +75,16 @@ class Atendimento(db.Model):
     operador_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
     operador_nome = db.Column(db.String(100), nullable=False)
 
+    # Novas colunas
+    criado_em = db.Column(db.DateTime, default=lambda: datetime.now(tz))
+    finalizado_em = db.Column(db.DateTime)
+
+    justificativa_cancelamento = db.Column(db.Text)
+    conclusao = db.Column(db.Text)
+
     status = db.Column(db.String(20), default="Aberto", nullable=False)  # Novo campo de status
     editado_por = db.Column(db.String(100))  # quem editou por último, NULL se nunca editado
-    ultima_atualizacao = db.Column(
-        db.DateTime(timezone=True),
-        default=lambda: datetime.now(pytz.timezone('America/Sao_Paulo'))
-    )
+    ultima_atualizacao = db.Column(db.DateTime(timezone=True),default=lambda: datetime.now(pytz.timezone('America/Sao_Paulo')))
 
     abrigo = db.relationship("Abrigo")
     operador = db.relationship("Usuario", foreign_keys=[operador_id])
@@ -130,7 +137,27 @@ def login():
 @app.route("/principal")
 @login_required
 def principal():
-    return render_template("principal.html", usuario=current_user)
+    # Estatísticas
+    total_atendimentos = Atendimento.query.count()
+    abertos = Atendimento.query.filter_by(status="Aberto").count()
+    em_atendimento = Atendimento.query.filter_by(status="Em Atendimento").count()
+    finalizados = Atendimento.query.filter_by(status="Atendido").count()
+    cancelados = Atendimento.query.filter_by(status="Cancelado").count()
+
+    # Últimos 5 atendimentos
+    atendimentos_recentes = Atendimento.query.order_by(Atendimento.criado_em.desc()).limit(5).all()
+
+    return render_template(
+        "principal.html",
+        usuario=current_user,
+        total_atendimentos=total_atendimentos,
+        abertos=abertos,
+        em_atendimento=em_atendimento,
+        finalizados=finalizados,
+        cancelados=cancelados,
+        atendimentos_recentes=atendimentos_recentes
+    )
+
 # ---------------- ROTAS DE USUARIOS ------------------
 @app.route("/config/usuarios")
 @login_required
@@ -395,39 +422,59 @@ def iniciar_atendimento(id):
     return render_template("atendimento_view.html", atendimento=atendimento, modo_inicio=True)
 
 
-@app.route("/atendimento/cancelar/<int:id>", methods=["POST"])
+@app.post("/finalizar_atendimento/<int:id>")
 @login_required
-def cancelar_atendimento(id):
-    atendimento = Atendimento.query.get_or_404(id)
+def finalizar_atendimento_ajax(id):
+    data = request.get_json()
+    conclusao = data.get("conclusao")
+    senha = data.get("senha")
 
-    # Verifica perfil
-    if current_user.perfil not in ['Admin', 'Atendente']:
-        flash("Você não tem permissão para cancelar atendimentos.", "error")
-        return redirect(url_for("atendimentos"))
+    if not check_password_hash(current_user.senha, senha):
+        return jsonify({"success": False, "error": "Senha incorreta."})
 
-    # Pega dados do form
-    justificativa = request.form.get("justificativa")
-    senha_digitada = request.form.get("senha")
+    atendimento = Atendimento.query.get(id)
+    if not atendimento:
+        return jsonify({"success": False, "error": "Atendimento não encontrado."})
 
-    # Campos obrigatórios
-    if not justificativa or not senha_digitada:
-        flash("Preencha todos os campos obrigatórios!", "error")
-        return redirect(url_for("iniciar_atendimento", id=id))
+    atendimento.conclusao = conclusao
+    atendimento.status = "Atendido"
 
-    # Confirma senha do usuário
-    if not check_password_hash(current_user.senha, senha_digitada):
-        flash("Senha incorreta!", "error")
-        return redirect(url_for("iniciar_atendimento", id=id))
-
-    # Atualiza atendimento
-    atendimento.status = "Cancelado"
-    atendimento.editado_por = current_user.nome or current_user.login
-    atendimento.ultima_atualizacao = datetime.now(pytz.timezone('America/Sao_Paulo'))
-    atendimento.descricao += f"\n\nCancelado com justificativa: {justificativa}"
-
+    # Quando o status for alterado para "Atendido" ou "Cancelado"
+    atendimento.finalizado_em = datetime.utcnow()  # Salva a data e hora atual
+    
     db.session.commit()
-    flash("Atendimento cancelado com sucesso!", "success")
-    return redirect(url_for("atendimentos"))
+
+    return jsonify({"success": True})
+
+
+
+@app.route("/atendimento/cancelar/<int:id>/ajax", methods=["POST"])
+@login_required
+def cancelar_atendimento_ajax(id):
+    atendimento = Atendimento.query.get_or_404(id)
+    data = request.get_json()
+
+    justificativa = data.get("justificativa", "").strip()
+    senha = data.get("senha", "").strip()
+
+    if not justificativa or not senha:
+        return jsonify({"success": False, "error": "Justificativa e senha são obrigatórios."})
+
+    # Valida senha do usuário logado
+    if not check_password_hash(current_user.senha, senha):
+        return jsonify({"success": False, "error": "Senha incorreta."})
+
+    # Atualiza status
+    atendimento.status = "Cancelado"
+    atendimento.justificativa_cancelamento = justificativa
+
+    # Quando o status for alterado para "Atendido" ou "Cancelado"
+    atendimento.finalizado_em = datetime.utcnow()  # Salva a data e hora atual
+    
+    db.session.commit()
+
+    
+    return jsonify({"success": True})
 
 # ------------------ Rota Flask para atualizar status e abrir WhatsApp ------------------
 
@@ -491,7 +538,29 @@ def export_pdf(id):
     response.headers['Content-Disposition'] = f'attachment; filename=atendimento_{atendimento.id}.pdf'
     return response
 
+@app.route('/atendimento/<int:id>/pdf')
+def exportar_atendimento_pdf(id):
+    atendimento = Atendimento.query.get_or_404(id)
 
+    # Passa informações de datas já formatadas para o template
+    criado_em = atendimento.criado_em.strftime('%d/%m/%Y %H:%M:%S') if atendimento.criado_em else "N/A"
+    finalizado_em = atendimento.finalizado_em.strftime('%d/%m/%Y %H:%M:%S') if atendimento.finalizado_em else "N/A"
+
+    html = render_template(
+        "atendimento_pdf.html",
+        atendimento=atendimento,
+        criado_em=criado_em,
+        finalizado_em=finalizado_em
+    )
+
+    # Gera PDF em memória
+    pdf = pdfkit.from_string(html, False)
+
+    # Retorna PDF como resposta HTTP
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'inline; filename=atendimento_{id}.pdf'
+    return response
 
 
 # ---------------- LOGOUT ------------------

@@ -68,6 +68,8 @@
             <th>Abrigo</th>
             <th>Operador</th>
             <th>Status</th>
+            <th>Data Criação</th> <!-- Nova coluna -->
+            <th>Data Finalização</th> <!-- Nova coluna -->
             <th style="width:80px; min-width:80px; text-align:center;">Ações</th>
         </tr>
     </thead>
@@ -84,41 +86,33 @@
                 <span class="status-bubble {{ c.status | lower | replace(' ', '-') }}"></span>
                 {{ c.status }}
             </td>
+            <td>{{ c.criado_em.strftime('%d/%m/%Y %H:%M:%S') if c.criado_em else '' }}</td> <!-- Exibe a data de criação -->
+            <td>{{ c.finalizado_em.strftime('%d/%m/%Y %H:%M:%S') if c.finalizado_em else '' }}</td> <!-- Exibe a data de finalização, caso tenha -->
+
             <td style="display:flex; gap:10px; justify-content:center; white-space:nowrap;">
 
-    {% if current_user.perfil == "Admin" %}
-        {% if c.status == "Aberto" %}
+    {% if c.status == "Aberto" %}
+        {% if current_user.perfil in ["Admin", "Operador"] %}
             <a href="{{ url_for('editar_atendimento', id=c.id) }}" title="Editar">
                 <i class="fas fa-pen" style="color:#ffaa00; font-size:18px;"></i>
             </a>
-        {% else %}
-            <span style="display:inline-block; width:18px;"></span>
         {% endif %}
-        <a href="{{ url_for('iniciar_atendimento', id=c.id) }}" title="Iniciar Atendimento">
-            <i class="fas fa-play" style="color:#00aa00; font-size:18px;"></i>
-        </a>
 
-    {% elif current_user.perfil == "Operador" %}
-        {% if c.status == "Aberto" %}
-            <a href="{{ url_for('editar_atendimento', id=c.id) }}" title="Editar">
-                <i class="fas fa-pen" style="color:#ffaa00; font-size:18px;"></i>
+        {% if current_user.perfil in ["Admin", "Atendente"] %}
+            <a href="{{ url_for('iniciar_atendimento', id=c.id) }}" title="Iniciar Atendimento">
+                <i class="fas fa-play" style="color:#00aa00; font-size:18px;"></i>
             </a>
-        {% else %}
-            <span style="display:inline-block; width:18px;"></span>
         {% endif %}
-
-    {% elif current_user.perfil == "Atendente" %}
-        <a href="{{ url_for('iniciar_atendimento', id=c.id) }}" title="Iniciar Atendimento">
-            <i class="fas fa-play" style="color:#00aa00; font-size:18px;"></i>
-        </a>
+    {% else %}
+        <span style="display:inline-block; width:18px;"></span>
     {% endif %}
 
     <!-- Sempre disponível -->
     <a href="{{ url_for('view_atendimento', id=c.id) }}" title="Visualizar">
         <i class="fas fa-eye" style="color:#004080; font-size:18px;"></i>
     </a>
-
 </td>
+
 
         </tr>
         {% endfor %}

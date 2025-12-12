@@ -279,28 +279,29 @@
     </script>
 
     <!-- ====== TOAST FLUTUANTE ====== -->
-    <<script>
+<div id="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>
+
+<script>
 document.addEventListener("DOMContentLoaded", function() {
     const container = document.getElementById("toast-container");
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                const toast = document.createElement("div");
-                toast.classList.add("toast", {{ category|tojson }});  // categoria como string JS
-                toast.innerText = {{ message|tojson }};               // mensagem segura
-                container.appendChild(toast);
+    // Passa as mensagens do Flask para JS de forma segura
+    const flashMessages = "{{ get_flashed_messages(with_categories=true) | tojson }}";
 
-                setTimeout(() => { toast.classList.add("show"); }, 100);
-                setTimeout(() => { toast.classList.remove("show"); }, 4000);
-                setTimeout(() => { toast.remove(); }, 5000);
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+    if (flashMessages && flashMessages.length) {
+        flashMessages.forEach(([category, message]) => {
+            const toast = document.createElement("div");
+            toast.classList.add("toast", category);
+            toast.innerText = message;
+            container.appendChild(toast);
+
+            setTimeout(() => { toast.classList.add("show"); }, 100);
+            setTimeout(() => { toast.classList.remove("show"); }, 4000);
+            setTimeout(() => { toast.remove(); }, 5000);
+        });
+    }
 });
 </script>
-
-
 
     <!-- ====== DEPENDÊNCIAS JS ====== -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
