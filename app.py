@@ -10,6 +10,13 @@ import pytz
 from urllib.parse import quote
 import pdfkit
 from io import BytesIO
+from flask_migrate import Migrate
+from dotenv import load_dotenv
+load_dotenv()
+
+
+# ---------------- TIMEZONE ------------------
+
 
 tz = pytz.timezone("America/Sao_Paulo")
 
@@ -20,6 +27,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -134,10 +142,11 @@ def login():
     return render_template("login.html")
 
 
+# app.py, na rota principal
 @app.route("/principal")
 @login_required
 def principal():
-    # Estatísticas
+    # Estatísticas...
     total_atendimentos = Atendimento.query.count()
     abertos = Atendimento.query.filter_by(status="Aberto").count()
     em_atendimento = Atendimento.query.filter_by(status="Em Atendimento").count()
@@ -147,16 +156,35 @@ def principal():
     # Últimos 5 atendimentos
     atendimentos_recentes = Atendimento.query.order_by(Atendimento.criado_em.desc()).limit(5).all()
 
+    # CONVERTER abrigos para lista de dicionários simples
+    abrigos = Abrigo.query.all()
+    abrigos_json = [
+        {
+            "id": a.id,
+            "nome": a.nome,
+            "status": a.status,
+            "latitude": a.latitude,
+            "longitude": a.longitude,
+            "logradouro": a.logradouro,
+            "bairro": a.bairro,
+            "cep": a.cep
+        } for a in abrigos
+    ]
+
     return render_template(
-        "principal.html",
+        "home.html",
         usuario=current_user,
         total_atendimentos=total_atendimentos,
         abertos=abertos,
         em_atendimento=em_atendimento,
         finalizados=finalizados,
         cancelados=cancelados,
-        atendimentos_recentes=atendimentos_recentes
+        atendimentos_recentes=atendimentos_recentes,
+        abrigos=abrigos_json   # 👈 usar a lista serializável
     )
+
+
+
 
 # ---------------- ROTAS DE USUARIOS ------------------
 @app.route("/config/usuarios")
@@ -332,7 +360,6 @@ def editar_atendimento(id):
 def view_atendimento(id):
     atendimento = Atendimento.query.get_or_404(id)
     return render_template("atendimento_view.html", atendimento=atendimento)
-
 
 # ---------------- ROTAS - ABRIGOS ------------------
 
@@ -586,4 +613,20 @@ if __name__ == "__main__":
         db.create_all()
     app.run(debug=True)
 
+# ---------------- SEED ------------------
+
+@app.cli.command("seed")
+def seed():
+    from werkzeug.security import generate_password_hash
+
+    admin = Usuario(
+        login="admin",
+        senha=generate_password_hash("123"),
+        perfil="Admin",
+        nome="Administrador"
+    )
+
+    db.session.add(admin)
+    db.session.commit()
+    print("Seed executado")
 

@@ -1,0 +1,196 @@
+{% extends "principal.html" %}
+{% block title %}Início{% endblock %}
+
+{% block content %}
+
+<!-- ================= SESSÃO: ATENDIMENTOS ================= -->
+<div class="container mb-4">
+
+    <div class="section-title">
+        <span>Atendimentos</span>
+    </div>
+
+    <div class="row g-3 text-center">
+        <div class="col">
+            <div class="card stat-card">
+                <h6>Total</h6>
+                <h3>{{ total_atendimentos }}</h3>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card stat-card text-primary">
+                <h6>Abertos</h6>
+                <h3>{{ abertos }}</h3>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card stat-card text-warning">
+                <h6>Em Atendimento</h6>
+                <h3>{{ em_atendimento }}</h3>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card stat-card text-success">
+                <h6>Finalizados</h6>
+                <h3>{{ finalizados }}</h3>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card stat-card text-danger">
+                <h6>Cancelados</h6>
+                <h3>{{ cancelados }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= SESSÃO: MAPA ================= -->
+<div class="container mb-5">
+
+    <div class="section-title">
+        <span>Abrigos</span>
+    </div>
+
+    <div class="card map-card shadow-sm">
+        <div id="map"></div>
+    </div>
+</div>
+
+<!-- ================= ESTILOS ================= -->
+<style>
+/* ===== TÍTULOS DE SESSÃO ===== */
+.section-title {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.section-title span {
+    display: inline-block;
+    border-bottom: 3px solid #0d6efd;
+    padding-bottom: 6px;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+
+/* ===== CARDS ===== */
+.stat-card {
+    padding: 22px;
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    animation: fadeUp 0.5s ease forwards;
+}
+
+.stat-card h6 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 6px;
+}
+
+.stat-card h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+/* Hover suave */
+.stat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.15);
+}
+
+/* ===== MAPA ===== */
+.map-card {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+#map {
+    width: 100%;
+    height: 75vh;
+    min-height: 500px;
+}
+
+/* ===== ANIMAÇÃO ===== */
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<!-- ================= LEAFLET ================= -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- ================= MAPA JS ================= -->
+<script id="abrigos-data" type="application/json">
+    {{ abrigos | tojson }}
+</script>
+
+<script>
+    const abrigos = JSON.parse(
+        document.getElementById("abrigos-data").textContent
+    );
+</script>
+
+<script>
+    const map = L.map('map');
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    const iconAtivo = L.icon({
+        iconUrl: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+    });
+
+    const iconInativo = L.icon({
+        iconUrl: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+    });
+
+    const bounds = L.latLngBounds([]);
+
+    abrigos.forEach(a => {
+        if (a.latitude == null || a.longitude == null) return;
+
+        const icon = a.status === "Ativo" ? iconAtivo : iconInativo;
+
+        L.marker([a.latitude, a.longitude], { icon })
+            .addTo(map)
+            .bindPopup(`
+                <strong>${a.nome}</strong><br>
+                <b>Status:</b> ${a.status}<br>
+                <b>Endereço:</b> ${a.logradouro}, ${a.bairro}<br>
+                <b>CEP:</b> ${a.cep}
+            `);
+
+        bounds.extend([a.latitude, a.longitude]);
+    });
+
+    if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [50, 50] });
+    } else {
+        map.setView([-15.7801, -47.9292], 12);
+    }
+
+    setTimeout(() => map.invalidateSize(), 300);
+</script>
+
+{% endblock %}
