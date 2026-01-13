@@ -238,7 +238,16 @@
             </div>
         </div>
 
+            {% if current_user.perfil == "Admin" %}
+                <a href="/logs"><i class="fas fa-clipboard-list"></i>
+                <span>Logs do Sistema</span>
+                </a>
+            {% endif %}
+
         <a href="/logout"><i class="fas fa-sign-out-alt"></i> Sair</a>
+
+        
+
     </div>
 
     <!-- ====== CONTEÚDO PRINCIPAL ====== -->

@@ -1,0 +1,201 @@
+{% extends "principal.html" %}
+
+{% block title %}Logs do Sistema{% endblock %}
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Logs do Sistema - Abrigo Amigo</title>
+
+    <!-- Bootstrap + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #e6f0ff;
+        }
+
+        /* ====== SIDEBAR ====== */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100vh;
+            background-color: #727475;
+            padding-top: 60px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-title {
+            color: #fff;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #fff;
+            border-radius: 5px;
+            margin: 2px 10px;
+            gap: 10px;
+            transition: background 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #005fa3;
+        }
+
+        /* ====== MAIN ====== */
+        .main-content {
+            margin-left: 250px;
+            padding: 40px;
+            min-height: 100vh;
+        }
+
+        .container-custom {
+            background: rgba(255,255,255,0.9);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        /* ====== TITLE ====== */
+        .section-title {
+            text-align: center;
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #0077cc;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #0077cc;
+            padding-bottom: 8px;
+        }
+
+        /* ====== TABLE ====== */
+        table th {
+            background-color: #0077cc;
+            color: #fff;
+            text-align: center;
+        }
+
+        table td {
+            vertical-align: middle;
+        }
+
+        .badge-log {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .badge-login { background: #27ae60; color: #fff; }
+        .badge-logout { background: #c0392b; color: #fff; }
+        .badge-create { background: #2980b9; color: #fff; }
+        .badge-update { background: #f39c12; color: #fff; }
+        .badge-delete { background: #e74c3c; color: #fff; }
+
+        /* ====== USER MENU ====== */
+        .user-menu {
+            position: fixed;
+            top: 10px;
+            right: 20px;
+        }
+
+        .user-menu span {
+            font-weight: bold;
+            color: #0077cc;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- ====== SIDEBAR ====== -->
+
+
+<!-- ====== MAIN CONTENT ====== -->
+<div class="main-content">
+
+    <!-- Usuário -->
+    <div class="user-menu">
+        <i class="fas fa-user-circle"></i>
+        <span>{{ current_user.login }}</span>
+    </div>
+
+    <div class="container-custom">
+
+        <div class="section-title">
+            <i class="fas fa-clipboard-list"></i> Logs do Sistema
+        </div>
+        
+        <!-- Botões de ação -->
+<div class="mb-3 d-flex gap-2">
+    <a href="/principal" class="btn btn-primary">
+        ⬅️ Voltar à Home
+    </a>
+    <a href="/logs/export/pdf" class="btn btn-danger">
+        📄 Exportar PDF
+    </a>
+    <a href="/logs/export/xlsx" class="btn btn-success">
+        📊 Exportar Excel (.xlsx)
+    </a>
+</div>
+
+
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead>
+                    <tr>
+                        <th width="18%">Data / Hora</th>
+                        <th width="20%">Usuário</th>
+                        <th width="20%">Ação</th>
+                        <th>Descrição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="text-center">
+                            {{ log.data_hora.strftime("%d/%m/%Y %H:%M:%S") }}
+                        </td>
+                        <td class="text-center">
+                            {{ log.usuario_login or "Sistema" }}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge-log badge-create">
+                                {{ log.acao }}
+                            </span>
+                        </td>
+                        <td>
+                            {{ log.descricao or "-" }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">
+                            Nenhum log registrado
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
+{% endblock %}

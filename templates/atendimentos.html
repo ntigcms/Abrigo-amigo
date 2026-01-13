@@ -68,8 +68,8 @@
             <th>Abrigo</th>
             <th>Operador</th>
             <th>Status</th>
-            <th>Data Criação</th> <!-- Nova coluna -->
-            <th>Data Finalização</th> <!-- Nova coluna -->
+            <th>Data de Criação</th> <!-- Nova coluna -->
+            <th>Data de Finalização</th> <!-- Nova coluna -->
             <th style="width:80px; min-width:80px; text-align:center;">Ações</th>
         </tr>
     </thead>
@@ -186,12 +186,9 @@ function toggleAll(source) {
 $(document).ready(function () {
 
     var table = $('#tableAtendimentos').DataTable({
-    order: [[0, "asc"]],
+    order: [[6, "desc"]], // ordem inicial opcional
     columnDefs: [
-        { orderable:false, targets:[0,6] },
-        { targets: 6, render: function(data, type, row) {
-            return data; // renderiza o HTML sem escapar
-        }}
+        { orderable:false, targets:[0,8] } // checkbox e ações
     ],
     language: {
         emptyTable:"Nenhum atendimento encontrado",

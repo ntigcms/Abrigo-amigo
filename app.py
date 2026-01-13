@@ -9,6 +9,8 @@ from functools import wraps
 import pytz
 from urllib.parse import quote
 import pdfkit
+import pandas as pd
+from io import BytesIO
 from io import BytesIO
 from flask_migrate import Migrate
 from dotenv import load_dotenv
@@ -97,6 +99,27 @@ class Atendimento(db.Model):
     abrigo = db.relationship("Abrigo")
     operador = db.relationship("Usuario", foreign_keys=[operador_id])
 
+# ----------------- REGISTRAR LOG -----------
+
+def registrar_log(acao, descricao=None, usuario=None):
+    if usuario is None and current_user.is_authenticated:
+        usuario = current_user
+
+    log = LogSistema(
+        usuario_id=usuario.id if usuario else None,
+        usuario_login=usuario.login if usuario else "Sistema",
+        acao=acao,
+        descricao=descricao,
+        rota=request.path if request else None,
+        metodo=request.method if request else None,
+        ip=request.remote_addr if request else None
+    )
+
+    db.session.add(log)
+    db.session.commit()
+
+
+
 # -----------------DECORADOR DE PERMISSÃO-----------
 def requer_perfil(*perfis):
     def decorator(func):
@@ -134,6 +157,7 @@ def login():
 
         if user and check_password_hash(user.senha, senha_digitada):
             login_user(user)
+            registrar_log("Login", f"Usuário {user.login} realizou login")
             return redirect(url_for("principal"))
         else:
             flash("Usuário ou senha incorretos!", "error")
@@ -221,6 +245,8 @@ def add_usuario():
         db.session.add(novo)
         db.session.commit()
 
+        registrar_log("Cadastro de usuário", f"Usuário criado: {login_digitado}")
+
         flash("Usuário criado com sucesso!", "success")
         return redirect(url_for("listar_usuarios"))
 
@@ -244,6 +270,8 @@ def edit_usuario(id):
             usuario.senha = generate_password_hash(nova_senha)
 
         db.session.commit()
+        registrar_log("Edição de usuário", f"Usuário editado: {usuario.login}")
+
         flash("Usuário atualizado com sucesso!", "success")
         return redirect(url_for("listar_usuarios"))
 
@@ -257,6 +285,8 @@ def delete_usuario(id):
     usuario = Usuario.query.get_or_404(id)
     db.session.delete(usuario)
     db.session.commit()
+
+    registrar_log("Exclusão de usuário", f"Usuário excluído: {usuario.login}")
     
     flash('Usuário excluído com sucesso!', 'success')
     return redirect(url_for('listar_usuarios'))
@@ -296,6 +326,8 @@ def novo_chamado():
 
         db.session.add(atendimento)
         db.session.commit()
+
+        registrar_log("Criar Atendimento",f"Atendimento criado para '{solicitante}' (Abrigo ID {abrigo_id})")
 
         flash('Atendimento salvo com sucesso!', 'success')
         return redirect(url_for('atendimentos'))
@@ -346,6 +378,9 @@ def editar_atendimento(id):
         atendimento.ultima_atualizacao = datetime.now(pytz.timezone('America/Sao_Paulo'))
 
         db.session.commit()
+
+        registrar_log("Editar Atendimento",f"Atendimento #{atendimento.id} atualizado")
+
         flash("Atendimento atualizado com sucesso!", "success")
         return redirect(url_for("atendimentos"))
 
@@ -389,6 +424,9 @@ def add_abrigo():
         db.session.add(novo_abrigo)
         db.session.commit()
 
+        registrar_log("Criar Abrigo", f"Abrigo '{novo_abrigo.nome}' cadastrado")
+
+
         # ====== TOAST ======
         flash("Abrigo cadastrado com sucesso!", "success")
 
@@ -414,6 +452,8 @@ def edit_abrigo(id):
         abrigo.longitude = request.form.get("longitude") or None
 
         db.session.commit()
+
+        registrar_log("Editar Abrigo", f"Abrigo '{abrigo.nome}' atualizado")
 
         # ====== TOAST ======
         flash("Abrigo atualizado com sucesso!", "success")
@@ -589,13 +629,93 @@ def exportar_atendimento_pdf(id):
     response.headers['Content-Disposition'] = f'inline; filename=atendimento_{id}.pdf'
     return response
 
+# --------------- LOGS ------------------
+
+class LogSistema(db.Model):
+    __tablename__ = "logs_sistema"
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
+    usuario_login = db.Column(db.String(50))
+    acao = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.Text)
+    rota = db.Column(db.String(200))
+    metodo = db.Column(db.String(10))
+    ip = db.Column(db.String(45))
+    data_hora = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(pytz.timezone("America/Sao_Paulo"))
+    )
+
+@app.route("/logs")
+@login_required
+@requer_perfil("Admin")
+def logs_sistema():
+    logs = LogSistema.query.order_by(LogSistema.data_hora.desc()).limit(500).all()
+    return render_template("logs.html", logs=logs)
+
+
+@app.route("/logs/export/pdf")
+@login_required
+@requer_perfil("Admin")
+def export_logs_pdf():
+    logs = LogSistema.query.order_by(LogSistema.data_hora.desc()).all()
+
+    html = render_template("logs_pdf.html", logs=logs)
+    pdf = pdfkit.from_string(html, False)
+
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'inline; filename=logs.pdf'
+    return response
+
+
+@app.route("/logs/export/xlsx")
+@login_required
+@requer_perfil("Admin")
+def export_logs_xlsx():
+    logs = LogSistema.query.order_by(LogSistema.data_hora.desc()).all()
+    data = [{
+        "ID": l.id,
+        "Usuário": l.usuario_login,
+        "Ação": l.acao,
+        "Descrição": l.descricao,
+        "Rota": l.rota,
+        "Método": l.metodo,
+        "IP": l.ip,
+        "Data/Hora": l.data_hora.strftime("%d/%m/%Y %H:%M:%S")
+    } for l in logs]
+
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    df.to_excel(output, index=False)
+    output.seek(0)
+
+    return make_response(
+        (output.read(), {
+            "Content-Disposition": "attachment; filename=logs.xlsx",
+            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        })
+    )
+
 
 # ---------------- LOGOUT ------------------
 
 @app.route("/logout")
+@login_required
 def logout():
+    usuario = current_user  # captura ANTES
+
+    registrar_log(
+        acao="Logout",
+        descricao=f"Usuário {usuario.login} realizou logout",
+        usuario=usuario
+    )
+
     logout_user()
-    return redirect("/")
+    return redirect(url_for("login"))
+
+
 
 
 # ---------------- COMANDOS CLI ------------------
@@ -629,4 +749,3 @@ def seed():
     db.session.add(admin)
     db.session.commit()
     print("Seed executado")
-
