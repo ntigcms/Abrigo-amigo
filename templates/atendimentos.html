@@ -89,22 +89,37 @@
             <td>{{ c.criado_em.strftime('%d/%m/%Y %H:%M:%S') if c.criado_em else '' }}</td> <!-- Exibe a data de criação -->
             <td>{{ c.finalizado_em.strftime('%d/%m/%Y %H:%M:%S') if c.finalizado_em else '' }}</td> <!-- Exibe a data de finalização, caso tenha -->
 
-            <td style="display:flex; gap:10px; justify-content:center; white-space:nowrap;">
+            <td class="acoes-cell">
+
 
     {% if c.status == "Aberto" %}
         {% if current_user.perfil in ["Admin", "Operador"] %}
             <a href="{{ url_for('editar_atendimento', id=c.id) }}" title="Editar">
                 <i class="fas fa-pen" style="color:#ffaa00; font-size:18px;"></i>
             </a>
+            {% else %}
+            <span class="icone-placeholder"></span>
         {% endif %}
 
         {% if current_user.perfil in ["Admin", "Atendente"] %}
             <a href="{{ url_for('iniciar_atendimento', id=c.id) }}" title="Iniciar Atendimento">
                 <i class="fas fa-play" style="color:#00aa00; font-size:18px;"></i>
             </a>
+            {% else %}
+            <span class="icone-placeholder"></span>
         {% endif %}
+            {% elif c.status == "Em Atendimento" %}
+              {% if current_user.perfil in ["Admin", "Atendente"] %}
+        <!-- Ícone para abrir detalhes -->
+        <a href="{{ url_for('iniciar_atendimento', id=c.id) }}" title="Abrir Atendimento">
+            <i class="fas fa-folder-open" style="color:#ffaa00; font-size:18px;"></i>
+        </a>
+        {% else %}
+            <span class="icone-placeholder"></span>
+            {% endif %}
     {% else %}
-        <span style="display:inline-block; width:18px;"></span>
+        <span class="icone-placeholder"></span>
+        <span class="icone-placeholder"></span>
     {% endif %}
 
     <!-- Sempre disponível -->
@@ -176,6 +191,22 @@
     0%, 50%, 100% { opacity: 1; }
     25%, 75% { opacity: 0.3; }
 }
+
+.acoes-cell {
+    display: flex;
+    justify-content: right;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.acoes-cell i,
+.acoes-cell .icone-placeholder {
+    font-size: 18px;  /* garante tamanho uniforme */
+    width: 18px;       /* largura fixa */
+    display: inline-block;
+    text-align: center;
+}
+
 </style>
 
 <script>

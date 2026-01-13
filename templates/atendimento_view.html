@@ -342,8 +342,16 @@ function exportPDF() {
 
 <script>
 function abrirModalWhatsapp() {
-    var modal = new bootstrap.Modal(document.getElementById('whatsappModal'));
-    modal.show();
+    const status = "{{ atendimento.status }}";
+
+    if (status === "Em Atendimento") {
+        // Se já está "Em Atendimento", apenas redireciona para WhatsApp sem mostrar o modal
+        confirmarWhatsapp();
+    } else {
+        // Caso contrário, mostra o modal normalmente
+        var modal = new bootstrap.Modal(document.getElementById('whatsappModal'));
+        modal.show();
+    }
 }
 
 function confirmarWhatsapp() {
