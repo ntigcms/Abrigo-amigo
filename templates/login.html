@@ -5,21 +5,33 @@
     <title>Abrigo Amigo – Sistema de Atendimentos e Chamados</title>
 
     <style>
-        /* Fundo com imagem sem afetar o conteúdo */
-    body::before {
-    content: "";
+        body::before {
+    content: '';
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('https://i.postimg.cc/nc908gXd/8ef85529-7b68-486b-adbb-7eeaeed90e22.png');
-    background-size: cover;       /* mostra a imagem inteira */
-    background-repeat: no-repeat;   /* evita repetição */
-    background-position: center;    /* centraliza a imagem */
-    opacity: 0.5;
+    inset: 0;
+
+    background-image: url('https://i.postimg.cc/LXVTvhFN/dreamina-2026-01-16-4516-Altere-a-tonalidade-geral-da-cor-para-az.jpg');
+    background-size: cover;
+    background-position: center;
+    filter: blur(12px);
+    transform: scale(1.1);
+
+    z-index: -2;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+
+    background-image: url('https://i.postimg.cc/LXVTvhFN/dreamina-2026-01-16-4516-Altere-a-tonalidade-geral-da-cor-para-az.jpg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+
     z-index: -1;
-    }
+}
+
 
     /* Mantém seu estilo atual */
     body {

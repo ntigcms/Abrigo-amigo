@@ -14,7 +14,6 @@
     {% endif %}
 </div>
 
-
 <!-- FILTROS PERSONALIZADOS -->
 <div class="filtros-container">
     <div class="filtro-item">
@@ -58,82 +57,69 @@
     </div>
 </div>
 
-<!-- TABELA DE ATENDIMENTOS -->
-<table id="tableAtendimentos">
-    <thead>
-        <tr>
-            <th style="width:30px;"><input type="checkbox" id="select-all" onclick="toggleAll(this)"></th>
-            <th>Solicitante</th>
-            <th>Telefone</th>
-            <th>Abrigo</th>
-            <th>Operador</th>
-            <th>Status</th>
-            <th>Data de Criação</th> <!-- Nova coluna -->
-            <th>Data de Finalização</th> <!-- Nova coluna -->
-            <th style="width:80px; min-width:80px; text-align:center;">Ações</th>
-        </tr>
-    </thead>
+<!-- BLOCO TABELA -->
+<div class="table-section">
+    <h4>Lista de Atendimentos</h4>
+    <table id="tableAtendimentos">
+        <thead>
+            <tr>
+                <th style="width:30px;"><input type="checkbox" id="select-all" onclick="toggleAll(this)"></th>
+                <th>Solicitante</th>
+                <th>Telefone</th>
+                <th>Abrigo</th>
+                <th>Operador</th>
+                <th>Status</th>
+                <th>Data de Criação</th>
+                <th>Data de Finalização</th>
+                <th style="width:80px; min-width:80px; text-align:center;">Ações</th>
+            </tr>
+        </thead>
 
-    <tbody>
-        {% for c in chamados %}
-        <tr>
-            <td><input type="checkbox" class="select-item"></td>
-            <td>{{ c.solicitante }}</td>
-            <td>{{ c.telefone }}</td>
-            <td>{{ c.abrigo.nome }}</td>
-            <td>{{ c.operador.login }}</td>
-            <td>
-                <span class="status-bubble {{ c.status | lower | replace(' ', '-') }}"></span>
-                {{ c.status }}
-            </td>
-            <td>{{ c.criado_em.strftime('%d/%m/%Y %H:%M:%S') if c.criado_em else '' }}</td> <!-- Exibe a data de criação -->
-            <td>{{ c.finalizado_em.strftime('%d/%m/%Y %H:%M:%S') if c.finalizado_em else '' }}</td> <!-- Exibe a data de finalização, caso tenha -->
-
-            <td class="acoes-cell">
-
-
-    {% if c.status == "Aberto" %}
-        {% if current_user.perfil in ["Admin", "Operador"] %}
-            <a href="{{ url_for('editar_atendimento', id=c.id) }}" title="Editar">
-                <i class="fas fa-pen" style="color:#ffaa00; font-size:18px;"></i>
-            </a>
-            {% else %}
-            <span class="icone-placeholder"></span>
-        {% endif %}
-
-        {% if current_user.perfil in ["Admin", "Atendente"] %}
-            <a href="{{ url_for('iniciar_atendimento', id=c.id) }}" title="Iniciar Atendimento">
-                <i class="fas fa-play" style="color:#00aa00; font-size:18px;"></i>
-            </a>
-            {% else %}
-            <span class="icone-placeholder"></span>
-        {% endif %}
-            {% elif c.status == "Em Atendimento" %}
-              {% if current_user.perfil in ["Admin", "Atendente"] %}
-        <!-- Ícone para abrir detalhes -->
-        <a href="{{ url_for('iniciar_atendimento', id=c.id) }}" title="Abrir Atendimento">
-            <i class="fas fa-folder-open" style="color:#ffaa00; font-size:18px;"></i>
-        </a>
-        {% else %}
-            <span class="icone-placeholder"></span>
-            {% endif %}
-    {% else %}
-        <span class="icone-placeholder"></span>
-        <span class="icone-placeholder"></span>
-    {% endif %}
-
-    <!-- Sempre disponível -->
-    <a href="{{ url_for('view_atendimento', id=c.id) }}" title="Visualizar">
-        <i class="fas fa-eye" style="color:#004080; font-size:18px;"></i>
-    </a>
-</td>
-
-
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+        <tbody>
+            {% for c in chamados %}
+            <tr>
+                <td><input type="checkbox" class="select-item"></td>
+                <td>{{ c.solicitante }}</td>
+                <td>{{ c.telefone }}</td>
+                <td>{{ c.abrigo.nome }}</td>
+                <td>{{ c.operador.login }}</td>
+                <td>
+                    <span class="status-bubble {{ c.status | lower | replace(' ', '-') }}"></span>
+                    {{ c.status }}
+                </td>
+                <td>{{ c.criado_em.strftime('%d/%m/%Y %H:%M:%S') if c.criado_em else '' }}</td>
+                <td>{{ c.finalizado_em.strftime('%d/%m/%Y %H:%M:%S') if c.finalizado_em else '' }}</td>
+                <td class="acoes-cell">
+                    {% if c.status == "Aberto" %}
+                        {% if current_user.perfil in ["Admin", "Operador"] %}
+                            <a href="{{ url_for('editar_atendimento', id=c.id) }}" title="Editar">
+                                <i class="fas fa-pen" style="color:#ffaa00;"></i>
+                            </a>
+                        {% else %}<span class="icone-placeholder"></span>{% endif %}
+                        {% if current_user.perfil in ["Admin", "Atendente"] %}
+                            <a href="{{ url_for('iniciar_atendimento', id=c.id) }}" title="Iniciar Atendimento">
+                                <i class="fas fa-play" style="color:#00aa00;"></i>
+                            </a>
+                        {% else %}<span class="icone-placeholder"></span>{% endif %}
+                    {% elif c.status == "Em Atendimento" %}
+                        {% if current_user.perfil in ["Admin", "Atendente"] %}
+                            <a href="{{ url_for('iniciar_atendimento', id=c.id) }}" title="Abrir Atendimento">
+                                <i class="fas fa-folder-open" style="color:#ffaa00;"></i>
+                            </a>
+                        {% else %}<span class="icone-placeholder"></span>{% endif %}
+                    {% else %}
+                        <span class="icone-placeholder"></span>
+                        <span class="icone-placeholder"></span>
+                    {% endif %}
+                    <a href="{{ url_for('view_atendimento', id=c.id) }}" title="Visualizar">
+                        <i class="fas fa-eye" style="color:#004080;"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 <!-- LIBS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
@@ -143,15 +129,7 @@
 
 <style>
 /* FILTROS */
-.filtros-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 25px;
-    margin-bottom: 15px;
-    padding: 15px 20px;
-    border-radius: 8px;
-}
+.filtros-container { display:flex; flex-wrap:wrap; justify-content:space-between; gap:25px; margin-bottom:15px; padding:15px 20px; border-radius:8px; background:#f8f9fa; }
 .filtro-item { display:flex; flex-direction: column; min-width:180px; flex:1; }
 .filtro-item label { font-size:13px; font-weight:600; color:#004080; margin-bottom:5px; }
 .search-container { position:relative; width:100%; }
@@ -163,74 +141,56 @@
 .clear-btn { background-color:#cc0000; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; }
 .clear-btn:hover { background-color:#a00000; }
 
+/* BLOCO DA TABELA */
+.table-section { background-color: #f8f9fa; padding:20px 25px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+.table-section h4 { margin-bottom:15px; font-weight:700; color:#0d6efd; }
+
 /* TABELA */
-#tableAtendimentos { width:100%; border-collapse:collapse; text-align:left; border:1px solid #ccc; font-size:14px; }
-#tableAtendimentos th, #tableAtendimentos td { border:1px solid #ccc; padding:8px 12px; }
-#tableAtendimentos thead tr { background-color:#004080; color:white; }
-#tableAtendimentos tbody tr:nth-child(odd) { background-color:#f0f0f0; }
-#tableAtendimentos tbody tr:nth-child(even) { background-color:#e0e0e0; }
-#tableAtendimentos tbody tr:hover { background-color:#d0d0d0; }
-#tableAtendimentos th { font-weight:bold; text-align:left; }
+#tableAtendimentos { width:100%; border-collapse:collapse; text-align:left; font-size:14px; }
+#tableAtendimentos th, #tableAtendimentos td { border:1px solid #dee2e6; padding:8px 12px; }
+#tableAtendimentos thead tr { background-color:#0d6efd; color:white; }
+#tableAtendimentos tbody tr:nth-child(odd) { background-color:#f8f9fa; }
+#tableAtendimentos tbody tr:nth-child(even) { background-color:#e9ecef; }
+#tableAtendimentos tbody tr:hover { background-color:#d0ebff; }
+#tableAtendimentos th { font-weight:bold; text-align:center; }
+.status-bubble { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:6px; vertical-align:middle; animation:blink 1s infinite; }
+.status-bubble.aberto { background-color:green; }
+.status-bubble.em-atendimento { background-color:yellow; }
+.status-bubble.cancelado { background-color:red; }
+.status-bubble.atendido { background-color:blue; }
+@keyframes blink { 0%,50%,100%{opacity:1;} 25%,75%{opacity:0.3;} }
+.acoes-cell { display:flex; justify-content:right; gap:10px; white-space:nowrap; }
+.acoes-cell i, .acoes-cell .icone-placeholder { font-size:18px; width:18px; display:inline-block; text-align:center; }
 
-/* STATUS BOLINHA */
-.status-bubble {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 6px;
-    vertical-align: middle;
-    animation: blink 1s infinite;
-}
-.status-bubble.aberto { background-color: green; }
-.status-bubble.em-atendimento { background-color: yellow; }
-.status-bubble.cancelado { background-color: red; }
-.status-bubble.atendido { background-color: blue; }
+/* DATATABLES FOOTER */
+.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color:#212529; font-weight:500; }
+.dataTables_wrapper .dataTables_paginate .paginate_button { background-color:#0d6efd; color:#fff !important; border-radius:6px; padding:3px 8px; margin:0 2px; }
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover { background-color:#0056b3; color:#fff !important; }
+.dataTables_wrapper .dataTables_paginate .paginate_button.current { background-color:#0056b3 !important; color:#fff !important; }
 
-@keyframes blink {
-    0%, 50%, 100% { opacity: 1; }
-    25%, 75% { opacity: 0.3; }
-}
-
-.acoes-cell {
-    display: flex;
-    justify-content: right;
-    gap: 10px;
-    white-space: nowrap;
-}
-
-.acoes-cell i,
-.acoes-cell .icone-placeholder {
-    font-size: 18px;  /* garante tamanho uniforme */
-    width: 18px;       /* largura fixa */
-    display: inline-block;
-    text-align: center;
-}
-
+/* DATATABLES LENGTH */
+.dataTables_length { color:#0d6efd; font-weight:600; font-size:0.95rem; margin-bottom:10px; }
+.dataTables_length label { color:#212529; font-weight:600; display:flex; align-items:center; gap:6px; }
+.dataTables_length select { background-color:#fff; color:#0d6efd; border:1px solid #0d6efd; border-radius:6px; padding:4px 8px; font-weight:500; cursor:pointer; }
+.dataTables_length select:hover { border-color:#0056b3; }
 </style>
 
 <script>
-function toggleAll(source) {
-    document.querySelectorAll('.select-item').forEach(c => c.checked = source.checked);
-}
+function toggleAll(source) { document.querySelectorAll('.select-item').forEach(c => c.checked = source.checked); }
 
 $(document).ready(function () {
-
     var table = $('#tableAtendimentos').DataTable({
-    order: [[6, "desc"]], // ordem inicial opcional
-    columnDefs: [
-        { orderable:false, targets:[0,8] } // checkbox e ações
-    ],
-    language: {
-        emptyTable:"Nenhum atendimento encontrado",
-        info:"Mostrando _START_ a _END_ de _TOTAL_",
-        lengthMenu:"Mostrar _MENU_",
-        paginate:{ next:"Próximo", previous:"Anterior" }
-    },
-    pageLength: 10,
-    dom:'rt<"bottom"l<"info-wrapper"ip>><"clear">'
-});
-
+        order: [[6, "desc"]],
+        columnDefs: [{ orderable:false, targets:[0,8] }],
+        language: {
+            emptyTable:"Nenhum atendimento encontrado",
+            info:"Mostrando _START_ a _END_ de _TOTAL_",
+            lengthMenu:"Mostrar _MENU_",
+            paginate:{ next:"Próximo", previous:"Anterior" }
+        },
+        pageLength: 10,
+        dom:'rt<"bottom"l<"info-wrapper"ip>><"clear">'
+    });
 
     // FILTROS
     $('.search-container').each(function() {
@@ -239,7 +199,6 @@ $(document).ready(function () {
         const optionsDiv = container.find('.options');
         const colIndex = container.data('col');
         const column = table.column(colIndex);
-
         let selecionados = [];
         const valores = column.data().unique().sort().toArray();
 
@@ -252,40 +211,14 @@ $(document).ready(function () {
             optionsDiv.show();
         }
 
-        input.on("click", function(e){
-            e.stopPropagation();
-            if(optionsDiv.is(":visible")) optionsDiv.hide();
-            else renderOptions(valores);
-        });
-
-        input.on("input", function(){
-            const query = input.val().toLowerCase();
-            const filtradas = valores.filter(v => v.toLowerCase().includes(query));
-            renderOptions(filtradas);
-        });
-
-        optionsDiv.on("change","input[type=checkbox]",function(){
-            const val = $(this).val();
-            if(this.checked) selecionados.push(val);
-            else selecionados = selecionados.filter(v => v !== val);
-            input.val(selecionados.join(", "));
-            if(selecionados.length) {
-                const regex = selecionados.map(v => '^'+$.fn.dataTable.util.escapeRegex(v)+'$').join('|');
-                column.search(regex,true,false).draw();
-            } else column.search('').draw();
-        });
-
-        $(document).on("click", function(e){
-            if(!$(e.target).closest(container).length) optionsDiv.hide();
-        });
-
+        input.on("click", function(e){ e.stopPropagation(); optionsDiv.is(":visible") ? optionsDiv.hide() : renderOptions(valores); });
+        input.on("input", function(){ const query=input.val().toLowerCase(); renderOptions(valores.filter(v=>v.toLowerCase().includes(query))); });
+        optionsDiv.on("change","input[type=checkbox]",function(){ const val=$(this).val(); this.checked ? selecionados.push(val) : selecionados=selecionados.filter(v=>v!==val); input.val(selecionados.join(", ")); selecionados.length ? column.search(selecionados.map(v=>'^'+$.fn.dataTable.util.escapeRegex(v)+'$').join('|'),true,false).draw() : column.search('').draw(); });
+        $(document).on("click", function(e){ if(!$(e.target).closest(container).length) optionsDiv.hide(); });
         container.data('reset', () => { selecionados=[]; input.val(''); column.search('').draw(); });
     });
 
-    $("#clear-filters").on("click", function(){
-        $('.search-container').each(function(){ $(this).data('reset')(); });
-    });
-
+    $("#clear-filters").on("click", function(){ $('.search-container').each(function(){ $(this).data('reset')(); }); });
 });
 </script>
 

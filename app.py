@@ -118,6 +118,21 @@ def registrar_log(acao, descricao=None, usuario=None):
     db.session.add(log)
     db.session.commit()
 
+class LogSistema(db.Model):
+    __tablename__ = "logs_sistema"
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
+    usuario_login = db.Column(db.String(50))
+    acao = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.Text)
+    rota = db.Column(db.String(200))
+    metodo = db.Column(db.String(10))
+    ip = db.Column(db.String(45))
+    data_hora = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(pytz.timezone("America/Sao_Paulo"))
+    )
 
 
 # -----------------DECORADOR DE PERMISSÃO-----------
@@ -631,21 +646,7 @@ def exportar_atendimento_pdf(id):
 
 # --------------- LOGS ------------------
 
-class LogSistema(db.Model):
-    __tablename__ = "logs_sistema"
 
-    id = db.Column(db.Integer, primary_key=True)
-    usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=True)
-    usuario_login = db.Column(db.String(50))
-    acao = db.Column(db.String(100), nullable=False)
-    descricao = db.Column(db.Text)
-    rota = db.Column(db.String(200))
-    metodo = db.Column(db.String(10))
-    ip = db.Column(db.String(45))
-    data_hora = db.Column(
-        db.DateTime,
-        default=lambda: datetime.now(pytz.timezone("America/Sao_Paulo"))
-    )
 
 @app.route("/logs")
 @login_required

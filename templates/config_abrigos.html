@@ -45,7 +45,9 @@
     </div>
 </div>
 
-<!-- TABELA DE ABRIGOS -->
+<!-- BLOCO DA TABELA -->
+<div class="table-section">
+<h4>Lista de Abrigos</h4>
 <table id="tableAbrigos">
     <thead>
         <tr>
@@ -67,33 +69,26 @@
             <td>{{ abrigo.logradouro }}</td>
             <td>{{ abrigo.status }}</td>
             <td>
-                <!-- Editar -->
-                <a href="/config/abrigos/edit/{{ abrigo.id }}" title="Editar"><i class="fas fa-pen" style="color:#ffaa00; font-size:18px; margin-right:12px;"></i></a>
-                <!-- Visualizar -->
-                <a href="/config/abrigos/view/{{ abrigo.id }}" title="Visualizar"><i class="fas fa-eye" style="color:#004080; font-size:18px;"></i></a>
+                <a href="/config/abrigos/edit/{{ abrigo.id }}" title="Editar">
+                    <i class="fas fa-pen" style="color:#ffaa00; font-size:18px; margin-right:12px;"></i></a>
+                <a href="/config/abrigos/view/{{ abrigo.id }}" title="Visualizar">
+                    <i class="fas fa-eye" style="color:#004080; font-size:18px;"></i></a>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+</div>
 
 <!-- LIBS -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
 <style>
-/* ======= FILTROS ======= */
-.filtros-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 25px;
-    margin-bottom: 15px;
-    background-color: transparent;
-    padding: 15px 20px;
-    border-radius: 8px;
-}
+/* ===== FILTROS ===== */
+.filtros-container { display:flex; flex-wrap:wrap; justify-content:space-between; gap:25px; margin-bottom:15px; padding:15px 20px; border-radius:8px; background:#f8f9fa; }
 
 .filtro-item { display:flex; flex-direction:column; min-width:180px; flex:1; }
 
@@ -104,10 +99,7 @@
     margin-bottom: 5px;
 }
 
-.search-container {
-    position: relative; width:100%;
-}
-
+.search-container { position: relative; width:100%; }
 .filter-search {
     width: 100%;
     padding: 8px 28px 8px 8px;
@@ -115,11 +107,9 @@
     border-radius: 6px;
     font-size: 13px;
 }
-
 .options {
     position:absolute;
-    top:36px;
-    left:0; right:0;
+    top:36px; left:0; right:0;
     background:white;
     border:1px solid #ccc;
     max-height:200px;
@@ -128,10 +118,8 @@
     border-radius:6px;
     display:none;
 }
-
 .option { padding:6px 10px; font-size:13px; cursor:pointer; }
 .option:hover { background:#f0f0f0; }
-
 .arrow {
     position:absolute;
     right:8px;
@@ -139,7 +127,6 @@
     transform:translateY(-50%);
     pointer-events:none;
 }
-
 .clear-btn {
     background-color: #cc0000;
     color:white;
@@ -151,40 +138,93 @@
 }
 .clear-btn:hover { background-color:#a00000; }
 
-/* ======= TABELA ======= */
+/* ===== BLOCO TABELA ===== */
+.table-section {
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+/* ===== TABELA ===== */
 #tableAbrigos {
     width: 100%;
     border-collapse: collapse;
     text-align: left;
     border: 1px solid #ccc;
+    font-size: 14px;
 }
 
-#tableAbrigos th, #tableAbrigos td {
-    border: 1px solid #ccc;
-    padding: 8px 12px;
-}
+#tableAbrigos th, #tableAbrigos td { border:1px solid #ccc; padding:8px 12px; }
 
 #tableAbrigos thead tr {
-    background-color: #004080;
-    color: white;
+    background-color: #0d6efd;
+    color:white;
+    text-align:center;
 }
 
-#tableAbrigos tbody tr:nth-child(odd) {
-    background-color: #f0f0f0;
+/* BLOCO DA TABELA */
+.table-section { background-color: #f8f9fa; padding:20px 25px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+.table-section h4 { margin-bottom:15px; font-weight:700; color:#0d6efd; }
+
+#tableAbrigos tbody tr:nth-child(odd) { background-color:#f8f9fa; }
+#tableAbrigos tbody tr:nth-child(even) { background-color:#e9ecef; }
+#tableAbrigos tbody tr:hover { background-color:#d0ebff; }
+
+#tableAbrigos th { font-weight:600; }
+
+/* DataTables footer */
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate { color:#212529; font-weight:500; }
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    background-color:#0d6efd;
+    color:white !important;
+    border-radius:6px;
+    padding:3px 8px;
+    margin:0 2px;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background-color:#0056b3;
+    color:white !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background-color:#0056b3 !important;
+    color:white !important;
 }
 
-#tableAbrigos tbody tr:nth-child(even) {
-    background-color: #e0e0e0;
+/* "Mostrar X linhas" */
+.dataTables_length {
+    color:#0d6efd;
+    font-weight:600;
+    font-size:0.95rem;
+    margin-bottom:10px;
+}
+.dataTables_length label {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-weight:600;
+}
+.dataTables_length select {
+    background:white;
+    color:#0d6efd;
+    border:1px solid #0d6efd;
+    border-radius:6px;
+    padding:4px 8px;
+    font-weight:500;
+    cursor:pointer;
+}
+.dataTables_length select:hover { border-color:#0056b3; }
+
+/* Coluna Ações */
+#tableAbrigos td:last-child {
+    display: flex;
+    justify-content: right; /* ou 'flex-end' para direita, 'center' para centralizado */
+    align-items: center;
+    gap: 12px; /* espaço entre ícones */
 }
 
-#tableAbrigos tbody tr:hover {
-    background-color: #d0d0d0;
-}
-
-#tableAbrigos th {
-    font-weight: bold;
-    text-align: left;
-}
 </style>
 
 <script>
@@ -209,11 +249,9 @@ $(document).ready(function () {
 
     /* === FILTROS === */
     $('.search-container').each(function(){
-
         const container = $(this);
         const input = container.find('.filter-search');
         const optionsDiv = container.find('.options');
-        const arrow = container.find('.arrow');
         const colIndex = container.data('col');
         const column = table.column(colIndex);
 
@@ -222,12 +260,9 @@ $(document).ready(function () {
 
         function renderOptions(lista){
             optionsDiv.empty();
-            lista.forEach(v => {
+            lista.forEach(v=>{
                 const checked = selecionados.includes(v) ? "checked" : "";
-                optionsDiv.append(`
-                    <div class="option">
-                        <input type="checkbox" value="${v}" ${checked}> ${v}
-                    </div>`);
+                optionsDiv.append(`<div class="option"><input type="checkbox" value="${v}" ${checked}> ${v}</div>`);
             });
             optionsDiv.show();
         }
@@ -246,7 +281,7 @@ $(document).ready(function () {
         optionsDiv.on("change","input[type=checkbox]",function(){
             const val = $(this).val();
             if(this.checked) selecionados.push(val);
-            else selecionados = selecionados.filter(v => v !== val);
+            else selecionados = selecionados.filter(v=>v!==val);
             input.val(selecionados.join(", "));
             applyFilter();
         });
@@ -254,27 +289,19 @@ $(document).ready(function () {
         function applyFilter(){
             if(selecionados.length){
                 const regex = selecionados.map(v => '^'+v+'$').join('|');
-                column.search(regex, true, false).draw();
+                column.search(regex,true,false).draw();
             } else column.search('').draw();
         }
 
         $(document).on("click", function(e){
-            if(!$(e.target).closest(container).length){
-                optionsDiv.hide();
-            }
+            if(!$(e.target).closest(container).length) optionsDiv.hide();
         });
 
-        container.data('reset', () => {
-            selecionados = [];
-            input.val('');
-            column.search('').draw();
-        });
+        container.data('reset', () => { selecionados=[]; input.val(''); column.search('').draw(); });
     });
 
     $("#clear-filters").on("click", function(){
-        $('.search-container').each(function(){
-            $(this).data('reset')();
-        });
+        $('.search-container').each(function(){ $(this).data('reset')(); });
     });
 
 });

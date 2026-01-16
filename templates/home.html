@@ -56,8 +56,12 @@
     </div>
 
     <div class="card map-card shadow-sm">
-        <div id="map"></div>
-    </div>
+    <button id="btn-recenter" class="map-recenter-btn">
+        <i class="fas fa-crosshairs"></i>
+    </button>
+    <div id="map"></div>
+</div>
+
 </div>
 
 <!-- ================= ESTILOS ================= -->
@@ -129,6 +133,33 @@
         transform: translateY(0);
     }
 }
+
+.map-recenter-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 1000;
+
+    background: rgba(13, 110, 253, 0.9);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: background 0.2s;
+}
+
+.map-recenter-btn:hover {
+    background: #084298;
+}
+
 </style>
 
 <!-- ================= LEAFLET ================= -->
@@ -148,7 +179,7 @@
 
 <script>
     const map = L.map('map');
-
+    
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
     }).addTo(map);
@@ -191,6 +222,16 @@
     }
 
     setTimeout(() => map.invalidateSize(), 300);
+
+    // Guarda o centro e zoom inicial do mapa
+let initialCenter = map.getCenter();
+let initialZoom = map.getZoom();
+
+// Botão de recentralizar
+document.getElementById("btn-recenter").addEventListener("click", () => {
+    map.setView(initialCenter, initialZoom, { animate: true });
+});
+
 </script>
 
 {% endblock %}

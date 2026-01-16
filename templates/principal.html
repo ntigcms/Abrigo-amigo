@@ -12,8 +12,29 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
+            position: relative;
+            z-index: 0;
             background-color: var(--bg-main, #ffffff);
         }
+
+/* ====== FUNDO GLOBAL DO SISTEMA ====== */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+
+    background-image: url('https://i.postimg.cc/LXVTvhFN/dreamina-2026-01-16-4516-Altere-a-tonalidade-geral-da-cor-para-az.jpg');
+    background-size: cover;              /* preenche a tela */
+    background-position: center;
+    background-repeat: no-repeat;
+
+    /* efeito visual elegante */
+    filter: blur(10px);
+    transform: scale(1.1);
+
+    opacity: 50;
+    z-index: -1;
+}
 
         /* ====== MENU LATERAL ====== */
         .sidebar {
@@ -104,7 +125,7 @@
             margin-left: 220px;
             padding: 40px;
             min-height: 100vh;
-            background-color: var(--bg-main, #e6f0ff);
+            background-color: transparent;
         }
 
         .container {
@@ -123,10 +144,46 @@
             margin-bottom: 30px;
         }
 
-        .app-title h1,
-        .app-title h3 {
-            margin: 5px 0;
-        }
+        .app-title h1 {
+    font-size: 3.2rem; /* letra maior */
+    font-weight: 800;
+    text-align: center;
+
+    /* Degradê no texto */
+    background: linear-gradient(
+        90deg,
+        #0d6efd,
+        #5fa8ff,
+        #0dcaf0
+    );
+    /* PROPRIEDADE PADRÃO */
+    background-clip: text;
+
+    /* PREFIXO PARA WEBKIT */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    /* Sombra branca elegante */
+    text-shadow:
+        0 0 4px rgba(255, 255, 255, 0.8),
+        0 2px 6px rgba(255, 255, 255, 0.6);
+
+    letter-spacing: 1px;
+}
+
+.app-title h3 {
+    font-size: 1.4rem;
+    margin-top: 10px;
+    text-align: center;
+
+    /* cor sólida pra não competir com o h1 */
+    color: #ffffff;
+
+    text-shadow:
+        0 0 3px rgba(255, 255, 255, 0.8),
+        0 1px 4px rgba(255, 255, 255, 0.6);
+}
+
 
         /* ====== USER MENU ====== */
         .user-menu {
@@ -211,6 +268,78 @@
             opacity: 1;
             transform: translateX(0);
         }
+
+        .user-menu-modern {
+    position: fixed;
+    top: 10px;
+    right: 20px;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.25); /* leve fundo flutuante */
+    backdrop-filter: blur(8px);      /* efeito de vidro fosco */
+}
+
+.user-menu-modern .user-icon i {
+    font-size: 1.4rem; /* maior que antes */
+    color: #ffffff;
+    text-shadow:
+        0 0 4px rgba(255,255,255,0.8),
+        0 2px 6px rgba(255,255,255,0.6);
+}
+
+.user-menu-modern .user-name {
+    font-family: monospace;
+    font-size: 1.4rem;
+    font-weight: 800;
+
+    background: linear-gradient(90deg, #0d6efd, #5fa8ff, #0dcaf0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text; /* compatibilidade padrão */
+
+    text-shadow:
+        0 0 1px rgba(255,255,255,0.8),
+        0 2px 6px rgba(255,255,255,0.6);
+}
+
+/* dropdown flutuante */
+.user-menu-modern .dropdown {
+    display: none;          /* escondido por padrão */
+    position: absolute;
+    right: 0;
+    top: 110%;
+    background-color: rgba(255,255,255,0.95);
+    min-width: 160px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    overflow: hidden;
+    transition: all 0.2s ease;
+    z-index: 2000;
+}
+
+.user-menu-modern .dropdown a {
+    display: block;
+    padding: 10px;
+    color: #333;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.user-menu-modern .dropdown a:hover {
+    background-color: #e6f0ff;
+}
+
+/* mostrar dropdown ao passar o mouse */
+.user-menu-modern:hover .dropdown {
+    display: block;
+}
+
     </style>
 
     <!-- ====== DEPENDÊNCIAS ====== -->
@@ -258,15 +387,16 @@
         </div>
 
         <!-- Usuário logado -->
-        <div class="user-menu">
-            <span class="user-icon"><i class="fas fa-user-circle"></i></span>
-            <span class="user-name">{{ current_user.login }}</span>
+       <div class="user-menu-modern" id="userMenu">
+    <span class="user-icon"><i class="fas fa-user-circle"></i></span>
+    <span class="user-name">{{ current_user.login }}</span>
 
-            <div class="dropdown">
-                <a href="/meus-dados"><i class="fas fa-id-card"></i> Meus Dados</a>
-                <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
-            </div>
-        </div>
+    <div class="dropdown">
+        <a href="/meus-dados"><i class="fas fa-id-card"></i> Meus Dados</a>
+        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+</div>
+
 
         <!-- CONTAINER DE TOASTS -->
         <div id="toast-container"></div>

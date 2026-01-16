@@ -15,29 +15,29 @@
 <div class="filtros-container">
     <div class="filtro-item">
         <label>Nome</label>
-        <div class="search-container" data-col="1">
-            <input type="text" placeholder="Clique para selecionar..." class="filter-search">
-            <span class="arrow">▼</span>
-            <div class="options"></div>
-        </div>
+        <div class="search-container" data-column="nome">
+    <input type="text" placeholder="Clique para selecionar..." class="filter-search">
+    <span class="arrow">▼</span>
+    <div class="options"></div>
+</div>
     </div>
 
     <div class="filtro-item">
         <label>Login</label>
-        <div class="search-container" data-col="2">
-            <input type="text" placeholder="Clique para selecionar..." class="filter-search">
-            <span class="arrow">▼</span>
-            <div class="options"></div>
-        </div>
+        <div class="search-container" data-column="login">
+    <input type="text" placeholder="Clique para selecionar..." class="filter-search">
+    <span class="arrow">▼</span>
+    <div class="options"></div>
+</div>
     </div>
 
     <div class="filtro-item">
         <label>Perfil</label>
-        <div class="search-container" data-col="3">
-            <input type="text" placeholder="Clique para selecionar..." class="filter-search">
-            <span class="arrow">▼</span>
-            <div class="options"></div>
-        </div>
+        <div class="search-container" data-column="perfil">
+    <input type="text" placeholder="Clique para selecionar..." class="filter-search">
+    <span class="arrow">▼</span>
+    <div class="options"></div>
+</div>
     </div>
 
     <div style="display:flex; align-items:center;">
@@ -45,283 +45,213 @@
     </div>
 </div>
 
-<!-- TABELA DE USUÁRIOS -->
-<table id="tableUsuarios">
-    <thead>
-        <tr>
-            <th><input type="checkbox" onclick="toggleAll(this)" id="select-all"></th>
-            <!-- ID oculto -->
-            <th style="display:none;">ID</th>
-
-            <th>Nome</th>
-            <th>Login</th>
-            <th>Perfil</th>
-
-            <th style="width: 100px;">Ações</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        {% for usuario in usuarios %}
-        <tr>
-            <td><input type="checkbox" class="select-item"></td>
-
-            <!-- ID oculto -->
-            <td style="display:none;">{{ usuario.id }}</td>
-
-            <td>{{ usuario.nome }}</td>
-            <td>{{ usuario.login }}</td>
-            <td>{{ usuario.perfil }}</td>
-
-            <td>
-                <!-- Editar -->
-                <a href="/config/usuarios/edit/{{ usuario.id }}" title="Editar">
-                    <i class="fas fa-pen" style="color:#ffaa00; font-size:18px; margin-right:12px;"></i></a>
-
-                <!-- Excluir -->
-                <a href="#" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ usuario.id }}" title="Excluir">
-                     <i class="fas fa-trash-alt" style="color:#dc3545; font-size:18px;"></i></a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<!-- BLOCO TABELA -->
+<div class="table-section">
+    <h4>Lista de Usuários</h4>
+    <table id="tableUsuarios">
+        <thead>
+            <tr>
+                <th style="width:30px;"><input type="checkbox" id="select-all" onclick="toggleAll(this)"></th>
+                <th style="display:none;">ID</th>
+                <th>Nome</th>
+                <th>Login</th>
+                <th>Perfil</th>
+                <th style="width:80px; min-width:80px; text-align:center;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td><input type="checkbox" class="select-item"></td>
+                <td style="display:none;">{{ usuario.id }}</td>
+                <td>{{ usuario.nome }}</td>
+                <td>{{ usuario.login }}</td>
+                <td>{{ usuario.perfil }}</td>
+                <td class="acoes-cell">
+                    <a href="/config/usuarios/edit/{{ usuario.id }}" title="Editar">
+                        <i class="fas fa-pen" style="color:#ffaa00;"></i>
+                    </a>
+                    <a href="#" data-bs-toggle="modal" data-bs-target="#modalExcluir{{ usuario.id }}" title="Excluir">
+                        <i class="fas fa-trash-alt" style="color:#dc3545;"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 
 <!-- Modal de Confirmação -->
 {% for usuario in usuarios %}
 <div class="modal fade" id="modalExcluir{{ usuario.id }}" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-
             <div class="modal-header bg-danger text-white">
                 <h5 class="modal-title">Confirmar Exclusão</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
             <div class="modal-body">
                 Tem certeza que deseja excluir o usuário <strong>{{ usuario.nome }}</strong>?
             </div>
-
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-
-                <!-- FORMULÁRIO POST CORRETO -->
                 <form action="/usuarios/delete/{{ usuario.id }}" method="POST">
                     <button type="submit" class="btn btn-danger">Excluir</button>
                 </form>
             </div>
-
         </div>
     </div>
 </div>
 {% endfor %}
 
-
-
 <!-- LIBS -->
- <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
 <style>
-/* ======= FILTROS ======= */
-.filtros-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 25px;
-    margin-bottom: 15px;
-    background-color: transparent;
-    padding: 15px 20px;
-    border-radius: 8px;
-}
-
-.filtro-item { display:flex; flex-direction:column; min-width:180px; flex:1; }
-
-.filtro-item label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #004080;
-    margin-bottom: 5px;
-}
-
-.search-container {
-    position: relative; width:100%;
-}
-
-.filter-search {
-    width: 100%;
-    padding: 8px 28px 8px 8px;
-    border: 1px solid #aaa;
-    border-radius: 6px;
-    font-size: 13px;
-}
-
-.options {
-    position:absolute;
-    top:36px;
-    left:0; right:0;
-    background:white;
-    border:1px solid #ccc;
-    max-height:200px;
-    overflow-y:auto;
-    z-index:10;
-    border-radius:6px;
-    display:none;
-}
-
+/* FILTROS */
+.filtros-container { display:flex; flex-wrap:wrap; justify-content:space-between; gap:25px; margin-bottom:15px; padding:15px 20px; border-radius:8px; background:#f8f9fa; }
+.filtro-item { display:flex; flex-direction: column; min-width:180px; flex:1; }
+.filtro-item label { font-size:13px; font-weight:600; color:#004080; margin-bottom:5px; }
+.search-container { position:relative; width:100%; }
+.filter-search { width:100%; padding:8px 28px 8px 8px; border:1px solid #aaa; border-radius:6px; font-size:13px; }
+.arrow { position:absolute; right:8px; top:50%; transform:translateY(-50%); }
+.options { position:absolute; top:36px; left:0; right:0; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto; z-index:10; border-radius:6px; display:none; }
 .option { padding:6px 10px; font-size:13px; cursor:pointer; }
 .option:hover { background:#f0f0f0; }
-
-.arrow {
-    position:absolute;
-    right:8px;
-    top:50%;
-    transform:translateY(-50%);
-    pointer-events:none;
-}
-
-.clear-btn {
-    background-color: #cc0000;
-    color:white;
-    padding:8px 15px;
-    border-radius:6px;
-    font-weight:bold;
-    border:none;
-    cursor:pointer;
-}
+.clear-btn { background-color:#cc0000; color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; }
 .clear-btn:hover { background-color:#a00000; }
 
-/* ======= TABELA ======= */
-#tableUsuarios {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
-    border: 1px solid #ccc;
-}
+/* BLOCO DA TABELA */
+.table-section { background-color: #f8f9fa; padding:20px 25px; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,0.12); }
+.table-section h4 { margin-bottom:15px; font-weight:700; color:#0d6efd; }
 
-#tableUsuarios th, #tableUsuarios td {
-    border: 1px solid #ccc;
-    padding: 8px 12px;
-}
+/* TABELA */
+#tableUsuarios { width:100%; border-collapse:collapse; text-align:left; font-size:14px; }
+#tableUsuarios th, #tableUsuarios td { border:1px solid #dee2e6; padding:8px 12px; }
+#tableUsuarios thead tr { background-color:#0d6efd; color:white; }
+#tableUsuarios tbody tr:nth-child(odd) { background-color:#f8f9fa; }
+#tableUsuarios tbody tr:nth-child(even) { background-color:#e9ecef; }
+#tableUsuarios tbody tr:hover { background-color:#d0ebff; }
+#tableUsuarios th { font-weight:bold; text-align:center; }
+.acoes-cell { display:flex; justify-content:right; gap:10px; white-space:nowrap; }
+.acoes-cell i, .acoes-cell .icone-placeholder { font-size:18px; width:18px; display:inline-block; text-align:center; }
 
-#tableUsuarios thead tr {
-    background-color: #004080;
-    color: white;
-}
+/* DATATABLES FOOTER */
+.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate { color:#212529; font-weight:500; }
+.dataTables_wrapper .dataTables_paginate .paginate_button { background-color:#0d6efd; color:#fff !important; border-radius:6px; padding:3px 8px; margin:0 2px; }
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover { background-color:#0056b3; color:#fff !important; }
+.dataTables_wrapper .dataTables_paginate .paginate_button.current { background-color:#0056b3 !important; color:#fff !important; }
 
-#tableUsuarios tbody tr:nth-child(odd) {
-    background-color: #f0f0f0;
-}
-
-#tableUsuarios tbody tr:nth-child(even) {
-    background-color: #e0e0e0;
-}
-
-#tableUsuarios tbody tr:hover {
-    background-color: #d0d0d0;
-}
-
-#tableUsuarios th {
-    font-weight: bold;
-    text-align: left;
-}
+/* DATATABLES LENGTH */
+.dataTables_length { color:#0d6efd; font-weight:600; font-size:0.95rem; margin-bottom:10px; }
+.dataTables_length label { color:#212529; font-weight:600; display:flex; align-items:center; gap:6px; }
+.dataTables_length select { background-color:#fff; color:#0d6efd; border:1px solid #0d6efd; border-radius:6px; padding:4px 8px; font-weight:500; cursor:pointer; }
+.dataTables_length select:hover { border-color:#0056b3; }
 </style>
 
 <script>
-function toggleAll(source){
+function toggleAll(source) {
     document.querySelectorAll('.select-item').forEach(c => c.checked = source.checked);
 }
 
 $(document).ready(function () {
-
-    const table = $('#tableUsuarios').DataTable({
-        order: [[1, "asc"]],   // Ordena pelo ID (oculto)
+    var table = $('#tableUsuarios').DataTable({
+        order: [[2, "asc"]], // Nome
         columnDefs: [
-            { orderable:false, targets:[0,4] },
-            { visible:false, targets:[1] }   // Coluna ID invisível
+            { orderable:false, targets:[0,5] }, // checkbox e ações
+            { visible:false, targets:[1] }      // ID escondido
         ],
-        language:{
+        language: {
             emptyTable:"Nenhum usuário encontrado",
             info:"Mostrando _START_ a _END_ de _TOTAL_",
             lengthMenu:"Mostrar _MENU_",
             paginate:{ next:"Próximo", previous:"Anterior" }
         },
         pageLength: 10,
-        dom: 'rt<"bottom"l<"info-wrapper"ip>><"clear">'
+        dom:'rt<"bottom"l<"info-wrapper"ip>><"clear">'
     });
 
-    /* === FILTROS === */
-    $('.search-container').each(function(){
+    // Mapeamento fixo das colunas
+    const colMap = { nome: 2, login: 3, perfil: 4 };
 
+    // FILTROS
+    $('.search-container').each(function() {
         const container = $(this);
         const input = container.find('.filter-search');
         const optionsDiv = container.find('.options');
-        const arrow = container.find('.arrow');
-        const colIndex = container.data('col');
+        const columnName = container.data('column');
+        const colIndex = colMap[columnName];
         const column = table.column(colIndex);
-
         let selecionados = [];
-        const valores = column.data().unique().sort().toArray();
 
-        function renderOptions(lista){
+        // Pega valores únicos da coluna no tbody
+        const valores = column.nodes().to$().map(function(){ 
+            return $(this).text().trim(); 
+        }).get().filter((v,i,a) => a.indexOf(v)===i)
+          .sort((a,b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
+        function renderOptions(lista) {
             optionsDiv.empty();
             lista.forEach(v => {
-                const checked = selecionados.includes(v) ? "checked" : "";
-                optionsDiv.append(`
-                    <div class="option">
-                        <input type="checkbox" value="${v}" ${checked}> ${v}
-                    </div>`);
+                const checked = selecionados.includes(v) ? 'checked' : '';
+                optionsDiv.append(`<div class="option"><input type="checkbox" value="${v}" ${checked}> ${v}</div>`);
             });
             optionsDiv.show();
         }
 
+        // Abrir filtro e fechar os outros
         input.on("click", function(e){
             e.stopPropagation();
-            renderOptions(valores);
+
+            // Fecha todos os outros filtros
+            $('.search-container').not(container).find('.options').hide();
+
+            // Alterna o filtro atual
+            optionsDiv.is(":visible") ? optionsDiv.hide() : renderOptions(valores);
         });
 
+        // Filtrar enquanto digita
         input.on("input", function(){
-            const q = input.val().toLowerCase();
-            const filtradas = valores.filter(v => v.toLowerCase().includes(q));
-            renderOptions(filtradas);
+            const query = input.val().toLowerCase();
+            renderOptions(valores.filter(v => v.toLowerCase().includes(query)));
         });
 
-        optionsDiv.on("change","input[type=checkbox]",function(){
-            const val = $(this).val();
-            if(this.checked) selecionados.push(val);
-            else selecionados = selecionados.filter(v => v !== val);
-            input.val(selecionados.join(", "));
-            applyFilter();
+        // Seleção de opções
+        optionsDiv.on("change","input[type=checkbox]", function(){ 
+            const val = $(this).val(); 
+            this.checked ? selecionados.push(val) : selecionados = selecionados.filter(v => v !== val); 
+            input.val(selecionados.join(", ")); 
+            selecionados.length 
+                ? column.search(selecionados.map(v => '^'+$.fn.dataTable.util.escapeRegex(v)+'$').join('|'),true,false).draw() 
+                : column.search('').draw(); 
         });
 
-        function applyFilter(){
-            if(selecionados.length){
-                const regex = selecionados.map(v => '^'+v+'$').join('|');
-                column.search(regex, true, false).draw();
-            } else column.search('').draw();
-        }
-
+        // Clique fora fecha o filtro
         $(document).on("click", function(e){
-            if(!$(e.target).closest(container).length){
-                optionsDiv.hide();
+            if(!$(e.target).closest('.search-container').length){
+                $('.options').hide();
             }
         });
 
-        container.data('reset', () => {
-            selecionados = [];
-            input.val('');
-            column.search('').draw();
+        // Reset do filtro
+        container.data('reset', () => { 
+            selecionados = []; 
+            input.val(''); 
+            column.search('').draw(); 
         });
     });
 
-    $("#clear-filters").on("click", function(){
-        $('.search-container').each(function(){
-            $(this).data('reset')();
-        });
+    // Botão limpar filtros
+    $("#clear-filters").on("click", function(){ 
+        $('.search-container').each(function(){ 
+            $(this).data('reset')(); 
+        }); 
     });
-
 });
+
 </script>
 
 {% endblock %}
