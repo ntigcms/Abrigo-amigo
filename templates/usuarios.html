@@ -5,9 +5,11 @@
 {% block content %}
 
 <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
-    <h2>Usuários</h2>
+    <h2></h2>
     <a href="/config/usuarios/add">
-        <button class="animated-btn">Cadastrar Usuário</button>
+        <button class="btn-primary-action">
+            <i class="fas fa-user-plus"></i> Cadastrar Usuário
+        </button>
     </a>
 </div>
 
@@ -40,7 +42,7 @@
 </div>
     </div>
 
-    <div style="display:flex; align-items:center;">
+    <div style="display:flex; align-items:center; margin-top:18px;">
         <button id="clear-filters" class="clear-btn">🧹 Limpar Filtros</button>
     </div>
 </div>
@@ -150,6 +152,37 @@
 .dataTables_length label { color:#212529; font-weight:600; display:flex; align-items:center; gap:6px; }
 .dataTables_length select { background-color:#fff; color:#0d6efd; border:1px solid #0d6efd; border-radius:6px; padding:4px 8px; font-weight:500; cursor:pointer; }
 .dataTables_length select:hover { border-color:#0056b3; }
+
+.btn-primary-action {
+    background: linear-gradient(135deg, #0d6efd, #004080);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(13, 110, 253, 0.35);
+    transition: all 0.25s ease;
+}
+
+.btn-primary-action i {
+    font-size: 14px;
+}
+
+.btn-primary-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.45);
+    background: linear-gradient(135deg, #0056b3, #002f5f);
+}
+
+.btn-primary-action:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
 </style>
 
 <script>

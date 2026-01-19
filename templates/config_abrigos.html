@@ -5,10 +5,12 @@
 {% block content %}
 
 <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
-    <h2>Abrigos</h2>
+    <h2></h2>
     <a href="/config/abrigos/add">
-        <button class="animated-btn">Cadastrar Abrigo</button>
-    </a>
+    <button class="btn-primary-action">
+        <i class="fas fa-home"></i> Cadastrar Abrigo
+    </button>
+</a>
 </div>
 
 <!-- FILTROS PERSONALIZADOS -->
@@ -33,14 +35,14 @@
 
     <div class="filtro-item">
         <label>Status</label>
-        <div class="search-container" data-col="3">
+        <div class="search-container" data-col="4">
             <input type="text" placeholder="Clique para selecionar..." class="filter-search">
             <span class="arrow">▼</span>
             <div class="options"></div>
         </div>
     </div>
 
-    <div style="display:flex; align-items:center;">
+    <div style="display:flex; align-items:center; margin-top:18px;">
         <button id="clear-filters" class="clear-btn">🧹 Limpar Filtros</button>
     </div>
 </div>
@@ -225,6 +227,38 @@
     gap: 12px; /* espaço entre ícones */
 }
 
+.btn-primary-action {
+    background: linear-gradient(135deg, #0d6efd, #004080);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 30px; /* pill */
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(13, 110, 253, 0.35);
+    transition: all 0.25s ease;
+}
+
+.btn-primary-action i {
+    font-size: 14px;
+}
+
+.btn-primary-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.45);
+    background: linear-gradient(135deg, #0056b3, #002f5f);
+}
+
+.btn-primary-action:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+
 </style>
 
 <script>
@@ -267,9 +301,15 @@ $(document).ready(function () {
             optionsDiv.show();
         }
 
+        // Abrir filtro e fechar os outros
         input.on("click", function(e){
             e.stopPropagation();
-            renderOptions(valores);
+
+            // Fecha todos os outros filtros
+            $('.search-container').not(container).find('.options').hide();
+
+            // Alterna o filtro atual
+            optionsDiv.is(":visible") ? optionsDiv.hide() : renderOptions(valores);
         });
 
         input.on("input", function(){

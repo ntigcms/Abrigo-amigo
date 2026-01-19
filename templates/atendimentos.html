@@ -5,11 +5,13 @@
 {% block content %}
 
 <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 20px;">
-    <h2>Atendimentos</h2>
+    <h2></h2>
     
     {% if current_user.perfil != "Atendente" %}
         <a href="/operador/novo-chamado">
-            <button class="animated-btn">Novo Atendimento</button>
+            <button class="btn-novo-atendimento">
+                <i class="fas fa-plus"></i> Novo Atendimento
+            </button>
         </a>
     {% endif %}
 </div>
@@ -52,7 +54,7 @@
         </div>
     </div>
 
-    <div style="display:flex; align-items:center;">
+    <div style="display:flex; align-items:center; margin-top:18px;">
         <button id="clear-filters" class="clear-btn">🧹 Limpar Filtros</button>
     </div>
 </div>
@@ -173,6 +175,38 @@
 .dataTables_length label { color:#212529; font-weight:600; display:flex; align-items:center; gap:6px; }
 .dataTables_length select { background-color:#fff; color:#0d6efd; border:1px solid #0d6efd; border-radius:6px; padding:4px 8px; font-weight:500; cursor:pointer; }
 .dataTables_length select:hover { border-color:#0056b3; }
+
+.btn-novo-atendimento {
+    background: linear-gradient(135deg, #0d6efd, #004080);
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 30px; /* bem arredondado */
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(13, 110, 253, 0.35);
+    transition: all 0.25s ease;
+}
+
+.btn-novo-atendimento i {
+    font-size: 13px;
+}
+
+.btn-novo-atendimento:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.45);
+    background: linear-gradient(135deg, #0056b3, #002f5f);
+}
+
+.btn-novo-atendimento:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
 </style>
 
 <script>
@@ -211,7 +245,16 @@ $(document).ready(function () {
             optionsDiv.show();
         }
 
-        input.on("click", function(e){ e.stopPropagation(); optionsDiv.is(":visible") ? optionsDiv.hide() : renderOptions(valores); });
+        // Abrir filtro e fechar os outros
+        input.on("click", function(e){
+            e.stopPropagation();
+
+            // Fecha todos os outros filtros
+            $('.search-container').not(container).find('.options').hide();
+
+            // Alterna o filtro atual
+            optionsDiv.is(":visible") ? optionsDiv.hide() : renderOptions(valores);
+        });
         input.on("input", function(){ const query=input.val().toLowerCase(); renderOptions(valores.filter(v=>v.toLowerCase().includes(query))); });
         optionsDiv.on("change","input[type=checkbox]",function(){ const val=$(this).val(); this.checked ? selecionados.push(val) : selecionados=selecionados.filter(v=>v!==val); input.val(selecionados.join(", ")); selecionados.length ? column.search(selecionados.map(v=>'^'+$.fn.dataTable.util.escapeRegex(v)+'$').join('|'),true,false).draw() : column.search('').draw(); });
         $(document).on("click", function(e){ if(!$(e.target).closest(container).length) optionsDiv.hide(); });
