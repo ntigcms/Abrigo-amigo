@@ -81,9 +81,13 @@
         </div>
 
         <!-- Mapa -->
-        <div class="form-item full-width">
-            <div id="map" style="height: 300px; border-radius: 6px;"></div>
-        </div>
+        <div class="form-item full-width" style="position: relative;">
+    <button type="button" id="btn-recenter" class="map-recenter-btn">
+    <i class="fas fa-crosshairs"></i>
+</button>
+    <div id="map" style="height: 300px; border-radius: 6px;"></div>
+</div>
+
 
         <!-- Botões -->
         <div class="form-actions">
@@ -102,71 +106,154 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <script>
-// CEP automático + centraliza mapa
-$('#buscarCep').on('click', function() {
-    let cep = $('#cep').val().replace(/\D/g, '');
-    if(cep.length !== 8) { alert("CEP inválido!"); return; }
+/* ===============================
+   MAPA + CEP (FINAL CONSOLIDADO)
+================================ */
 
-    $.getJSON(`https://viacep.com.br/ws/${cep}/json/`, function(data) {
-        if(!data.erro) {
-            $('#logradouro').val(data.logradouro);
-            $('#bairro').val(data.bairro);
-            $('#cidade').val(data.localidade);
-            $('#estado').val(data.uf);
+// ---------- Inputs ----------
+const latInput = document.getElementById('latitude');
+const lngInput = document.getElementById('longitude');
+const cepInput = document.getElementById('cep');
 
-            // Geocodifica o endereço completo para lat/lng
-            const endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade}, ${data.uf}, Brasil`;
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}`)
-            .then(response => response.json())
-            .then(result => {
-                if(result && result.length > 0) {
-                    const lat = parseFloat(result[0].lat);
-                    const lon = parseFloat(result[0].lon);
+// ---------- Verifica edição ----------
+const hasCoords = latInput.value && lngInput.value;
 
-                    // Atualiza inputs
-                    $('#latitude').val(lat.toFixed(6));
-                    $('#longitude').val(lon.toFixed(6));
+// ---------- Coordenadas iniciais ----------
+let lat = hasCoords ? parseFloat(latInput.value) : -15.7801;
+let lng = hasCoords ? parseFloat(lngInput.value) : -47.9292;
 
-                    // Move marcador e centraliza mapa
-                    marker.setLatLng([lat, lon]);
-                    map.setView([lat, lon], 16);
-                }
-            });
-        } else {
-            alert("CEP não encontrado!");
+// ---------- Inicializa mapa (já centralizado no marcador) ----------
+const map = L.map('map').setView(
+    [lat, lng],
+    hasCoords ? 16 : 5
+);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+}).addTo(map);
+
+// ---------- Marcador ----------
+const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+// ---------- Centro baseado no CEP ----------
+let cepCenter = hasCoords ? [lat, lng] : null;
+const cepZoom = 16;
+
+// ---------- Mapa de estados ----------
+const estadosUF = {
+    "Acre": "AC", "Alagoas": "AL", "Amapá": "AP", "Amazonas": "AM",
+    "Bahia": "BA", "Ceará": "CE", "Distrito Federal": "DF",
+    "Espírito Santo": "ES", "Goiás": "GO", "Maranhão": "MA",
+    "Mato Grosso": "MT", "Mato Grosso do Sul": "MS",
+    "Minas Gerais": "MG", "Pará": "PA", "Paraíba": "PB",
+    "Paraná": "PR", "Pernambuco": "PE", "Piauí": "PI",
+    "Rio de Janeiro": "RJ", "Rio Grande do Norte": "RN",
+    "Rio Grande do Sul": "RS", "Rondônia": "RO", "Roraima": "RR",
+    "Santa Catarina": "SC", "São Paulo": "SP", "Sergipe": "SE",
+    "Tocantins": "TO"
+};
+
+// ---------- Reverse Geocoding ----------
+function atualizarEnderecoPorMapa(lat, lng) {
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        .then(res => res.json())
+        .then(data => {
+            if (!data.address) return;
+
+            const a = data.address;
+
+            $('#cep').val(a.postcode || '');
+            $('#logradouro').val(a.road || '');
+            $('#bairro').val(a.suburb || a.neighbourhood || '');
+            $('#cidade').val(a.city || a.town || a.village || '');
+
+            // Estado (UF)
+            let uf = '';
+            if (a.state_code) {
+                uf = a.state_code.toUpperCase();
+            } else if (a.state && estadosUF[a.state]) {
+                uf = estadosUF[a.state];
+            }
+            $('#estado').val(uf);
+
+            // Atualiza centro do CEP
+            cepCenter = [lat, lng];
+        });
+}
+
+// ---------- Arrastar marcador ----------
+marker.on('dragend', () => {
+    const pos = marker.getLatLng();
+
+    latInput.value = pos.lat.toFixed(6);
+    lngInput.value = pos.lng.toFixed(6);
+
+    atualizarEnderecoPorMapa(pos.lat, pos.lng);
+});
+
+// ---------- Clique no mapa ----------
+map.on('click', e => {
+    const { lat, lng } = e.latlng;
+
+    marker.setLatLng([lat, lng]);
+    latInput.value = lat.toFixed(6);
+    lngInput.value = lng.toFixed(6);
+
+    atualizarEnderecoPorMapa(lat, lng);
+});
+
+// ---------- Buscar CEP ----------
+$('#buscarCep').on('click', () => {
+    const cep = cepInput.value.replace(/\D/g, '');
+    if (cep.length !== 8) {
+        alert('CEP inválido');
+        return;
+    }
+
+    $.getJSON(`https://viacep.com.br/ws/${cep}/json/`, data => {
+        if (data.erro) {
+            alert('CEP não encontrado');
+            return;
         }
+
+        $('#logradouro').val(data.logradouro);
+        $('#bairro').val(data.bairro);
+        $('#cidade').val(data.localidade);
+        $('#estado').val(data.uf);
+
+        const endereco = `${data.logradouro}, ${data.bairro}, ${data.localidade}, ${data.uf}, Brasil`;
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(endereco)}`)
+            .then(r => r.json())
+            .then(result => {
+                if (!result.length) return;
+
+                const lat = parseFloat(result[0].lat);
+                const lon = parseFloat(result[0].lon);
+
+                latInput.value = lat.toFixed(6);
+                lngInput.value = lon.toFixed(6);
+
+                marker.setLatLng([lat, lon]);
+                cepCenter = [lat, lon];
+                map.setView(cepCenter, cepZoom);
+            });
     });
 });
 
-// Mapa e marcador
-var latInput = document.getElementById('latitude');
-var lngInput = document.getElementById('longitude');
-var lat = parseFloat(latInput.value) || -15.7801;
-var lng = parseFloat(lngInput.value) || -47.9292;
-var map = L.map('map').setView([lat, lng], 5);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
-
-var marker = L.marker([lat, lng], {draggable:true}).addTo(map);
-
-// Atualiza inputs ao arrastar marcador
-marker.on('dragend', function(e){
-    var pos = marker.getLatLng();
-    latInput.value = pos.lat.toFixed(6);
-    lngInput.value = pos.lng.toFixed(6);
+// ---------- Botão recentralizar ----------
+document.getElementById('btn-recenter').addEventListener('click', () => {
+    if (cepCenter) {
+        map.setView(cepCenter, cepZoom, { animate: true });
+    }
 });
 
-// Atualiza marcador se inputs forem alterados manualmente
-latInput.addEventListener('change', updateMarker);
-lngInput.addEventListener('change', updateMarker);
-
-function updateMarker() {
-    var newLat = parseFloat(latInput.value) || lat;
-    var newLng = parseFloat(lngInput.value) || lng;
-    marker.setLatLng([newLat,newLng]);
-    map.setView([newLat,newLng], map.getZoom());
-}
+// ---------- Força render correto do mapa ----------
+setTimeout(() => {
+    map.invalidateSize();
+    map.setView([lat, lng], hasCoords ? 16 : 5);
+}, 200);
 </script>
-
 
 <style>
 .form-container {
@@ -188,5 +275,31 @@ input[readonly] { background-color:#e9e9e9; }
 .btn-submit:hover { background-color:#003060; }
 .btn-cancel { background-color:#ccc; color:#333; border:none; padding:10px 20px; border-radius:6px; cursor:pointer; }
 .btn-cancel:hover { background-color:#aaa; }
+
+.map-recenter-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+
+    background: rgba(13, 110, 253, 0.9);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.map-recenter-btn:hover {
+    background: #084298;
+}
+
 </style>
 {% endblock %}

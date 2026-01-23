@@ -575,21 +575,30 @@ def iniciar_atendimento_whatsapp(id):
 
     # Prepara todas as informações
     abrigo = atendimento.abrigo
-    texto = (
-        f"Atendimento ID: {atendimento.id}\n"
-        f"Solicitante: {atendimento.solicitante}\n"
-        f"Contato: {atendimento.telefone}\n"
-        f"Abrigo: {abrigo.nome}\n"
-        f"Endereço: {abrigo.logradouro}, {abrigo.bairro}, CEP {abrigo.cep}\n"
-        f"Latitude: {abrigo.latitude}\n"
-        f"Longitude: {abrigo.longitude}\n"
-        f"Descrição: {atendimento.descricao}\n"
-        f"Status: {atendimento.status}\n"
-        f"Mapa: https://www.google.com/maps/search/?api=1&query={abrigo.latitude},{abrigo.longitude}"
+    mapa_url = (
+        f"https://www.google.com/maps/search/?api=1&query={abrigo.latitude},{abrigo.longitude}"
+        if abrigo and abrigo.latitude and abrigo.longitude
+        else "Não informado"
     )
 
+    mensagem = f"""OPERAÇÃO ABRIGO AMIGO
+
+Seguem os dados do chamado e orientações para atendimento:
+
+Atendimento ID: {atendimento.id}
+Solicitante: {atendimento.solicitante}
+Contato: {atendimento.telefone}
+Abrigo: {abrigo.nome}
+Endereço: {abrigo.logradouro}, {abrigo.bairro}, CEP {abrigo.cep}
+Latitude: {abrigo.latitude}
+Longitude: {abrigo.longitude}
+Descrição: {atendimento.descricao}
+Status: {atendimento.status}
+Mapa: {mapa_url}
+"""
+
     # URL encode
-    url_whatsapp = f"https://api.whatsapp.com/send?text={quote(texto)}"
+    url_whatsapp = f"https://api.whatsapp.com/send?text={quote(mensagem)}"
 
     return redirect(url_whatsapp)
 
@@ -601,7 +610,20 @@ def iniciar_atendimento_whatsapp(id):
 @login_required
 def export_whatsapp(id):
     atendimento = Atendimento.query.get_or_404(id)
-    mensagem = f"Atendimento #{atendimento.id} - Cliente: {atendimento.cliente_nome}\nStatus: {atendimento.status}\nDescrição: {atendimento.descricao}"
+    mensagem = f"""OPERAÇÃO ABRIGO AMIGO
+
+Seguem os dados do chamado e orientações para atendimento:
+
+Atendimento ID: {atendimento.id}
+Solicitante: {atendimento.cliente_nome}
+Contato: {atendimento.cliente_contato}
+Abrigo: {atendimento.abrigo.nome if atendimento.abrigo else 'Não informado'}
+Endereço: {atendimento.logradouro}, {atendimento.bairro}, CEP {atendimento.cep}
+Latitude: {atendimento.latitude}
+Longitude: {atendimento.longitude}
+Descrição: {atendimento.descricao}
+Status: {atendimento.status}
+"""
     # URL encode e direciona para WhatsApp Web
     import urllib.parse
     url = f"https://wa.me/?text={urllib.parse.quote(mensagem)}"
